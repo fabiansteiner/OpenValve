@@ -3,6 +3,8 @@
  *
  * Created: 02.11.2022 16:19:40
  *  Author: SteinerF
+ *
+ * For storing data permanently (configuration, open/close state, etc...)
  */ 
 
 

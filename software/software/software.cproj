@@ -20,10 +20,10 @@
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
     <ProgFlashFromRam>true</ProgFlashFromRam>
-    <RamSnippetAddress />
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
     <UncachedRange />
     <preserveEEPROM>true</preserveEEPROM>
-    <OverrideVtorValue />
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
     <BootSegment>2</BootSegment>
     <ResetRule>0</ResetRule>
     <eraseonlaunchrule>0</eraseonlaunchrule>
@@ -126,6 +126,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ADC.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ADC.h">
       <SubType>compile</SubType>
     </Compile>
@@ -138,7 +141,7 @@
     <Compile Include="EEPROM.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="inputController.h">
+    <Compile Include="UserInterface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="LEDs.h">
@@ -148,6 +151,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="SoilMoistureSensor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="valve.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="valve.h">
