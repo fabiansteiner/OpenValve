@@ -16,8 +16,7 @@ int main(void)
 	
 	sei();
 
-	PORTB_DIRSET = (1<<3); 
-	PORTA_DIRSET = (1<<7); 
+	initLEDs();
 	uart_init(9600);
 	initADC();
 	initializeValve();

@@ -81,7 +81,7 @@ void initADC(){
 ISR(ADC0_RESRDY_vect){
 	adc_result_current = read_adc_sample_accumulator();
 	if(getValveState() != CLOSED){
-		if(adc_result_current >= 1000){
+		if(adc_result_current >= 600){
 			PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
 			setValveState(CLOSED);
 		}

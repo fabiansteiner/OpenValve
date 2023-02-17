@@ -11,6 +11,26 @@
 #ifndef INPUTCONTROLLER_H_
 #define INPUTCONTROLLER_H_
 
+typedef enum {
+	SELECTTHRESHOLD = 1, 
+	SELECTINTERVAL= 2,
+	CHANGETHRESHOLD = 3, 
+	CHANGEINTERVAL = 4, 
+	SHOWBATTERY = 5, 
+	CHANGESTATE = 6}  UIstate;
+	
+typedef struct{
+	uint16_t tresholdLow;
+	uint16_t thresholdHigh;
+} thresholds;
+	
+void initUI();
+
+
+thresholds getCurrentThresholds();
+
+uint32_t getIntervalMS();
+
 
 
 

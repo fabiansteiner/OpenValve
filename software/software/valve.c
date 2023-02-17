@@ -25,6 +25,7 @@ void initializeValve(){
 	
 	PORTA.DIR &= ~ PIN5_bm;												//Set as input
 	PORTA.PIN5CTRL |= PORT_PULLUPEN_bm | PORT_ISC_FALLING_gc;			//Enable Pull-UP & enable interrupt on falling edge
+	state = CLOSED;
 	
 }
 
@@ -33,7 +34,7 @@ void openValve(){
 		//drive motor for 50ms
 		state = OPENING;
 		PORTA_OUTSET = (1<<PIN_MOTORMINUS); // set HIGH;
-		_delay_ms(50);
+		_delay_ms(250);
 		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 		state = OPEN;
 	}
@@ -46,7 +47,7 @@ void closeValve(){
 		state = CLOSING;
 		PORTB_OUTSET = (1<<PIN_MOTORPLUS); // set HIGH;
 		
-		_delay_ms(50);
+		_delay_ms(100);
 		ADC_0_startMotorCurrentCheck();
 	}
 	
