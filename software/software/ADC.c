@@ -24,6 +24,7 @@ uint16_t read_adc_sample_accumulator()
 
 void ADC_0_startMotorCurrentCheck()
 {
+	while(stateADC != MEASURESOIL);
 	
 	stateADC = CURRSENSING;
 	ADC0.CTRLC = ADC_PRESC_DIV16_gc								/* CLK_PER divided by 16 */
@@ -80,10 +81,20 @@ void initADC(){
 
 ISR(ADC0_RESRDY_vect){
 	adc_result_current = read_adc_sample_accumulator();
+<<<<<<< HEAD
 	if(getValveState() != CLOSED){
 		if(adc_result_current >= 600){
+=======
+	if(getValveState() == CLOSING){
+		if(adc_result_current >= 800){
+>>>>>>> d2a009c0bc6de217d86a0f1a1fa7a3a3a4d37f69
 			PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
 			setValveState(CLOSED);
+		}
+	}else if(getValveState() == OPENING){
+		if(adc_result_current >= 400){
+			PORTB_OUTCLR = (1<<PIN_MOTORMINUS);
+			setValveState(OPEN);
 		}
 	}else{
 		//Disable ADC

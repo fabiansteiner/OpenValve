@@ -24,27 +24,43 @@ int main(void)
 	
     while (1) 
     {
-		
+
 		if((PORTB_IN & (1<<0))==0){
-			 _delay_ms(5);
-			 while((PORTB_IN & (1<<0))==0);
-			 changeMotorState();
-		}
-		
-		if(getValveState() == OPEN){
-			//PORTB_OUTSET = (1<<3);
-		}else if (getValveState() == CLOSED){
-			//PORTB_OUTCLR = (1<<3);
-		}
-		
-		if(ADC_0_readSoilMoisture() >= 512){
 			PORTA_OUTSET = (1<<7);
 		}else{
 			PORTA_OUTCLR = (1<<7);
 		}
 		
-		_delay_ms(5);
+		//Switch LED when motor stop button is pressed
+		if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
+			PORTB_OUTSET = (1<<3);
+		}else{
+			PORTB_OUTCLR = (1<<3);
+		}
+		
+		if(ADC_0_readSoilMoisture() >= 512){
+			//PORTA_OUTSET = (1<<7);
+			if(getValveState() == OPEN || getValveState()== UNDEFINED){
+				closeValve();
+			}
+		}else{
+			//PORTA_OUTCLR = (1<<7);
+			if(getValveState() == CLOSED){
+				openValve();
+			}
+		}
+		
+		_delay_ms(10);
 		
     }
 }
 
+
+/*
+		//Switching motor state with the magnet
+		if((PORTB_IN & (1<<0))==0){
+			 _delay_ms(5);
+			 while((PORTB_IN & (1<<0))==0);
+			 changeMotorState();
+		}
+		*/
