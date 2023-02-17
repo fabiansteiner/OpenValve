@@ -25,14 +25,12 @@ void initializeValve(){
 	
 	PORTA.DIR &= ~ PIN5_bm;												//Set as input
 	PORTA.PIN5CTRL |= PORT_PULLUPEN_bm | PORT_ISC_FALLING_gc;			//Enable Pull-UP & enable interrupt on falling edge
-<<<<<<< HEAD
-	state = CLOSED;
-=======
+
 
 	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
 		state = CLOSED;
 	}
->>>>>>> d2a009c0bc6de217d86a0f1a1fa7a3a3a4d37f69
+
 	
 }
 
@@ -41,13 +39,11 @@ void openValve(){
 		//drive motor for 50ms
 		state = OPENING;
 		PORTA_OUTSET = (1<<PIN_MOTORMINUS); // set HIGH;
-<<<<<<< HEAD
-		_delay_ms(250);
-=======
+
 		_delay_ms(50);
 		ADC_0_startMotorCurrentCheck();
 		_delay_ms(300);
->>>>>>> d2a009c0bc6de217d86a0f1a1fa7a3a3a4d37f69
+
 		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 		state = OPEN;
 		_delay_ms(500);
@@ -61,9 +57,7 @@ void closeValve(){
 		state = CLOSING;
 		PORTB_OUTSET = (1<<PIN_MOTORPLUS); // set HIGH;
 		
-<<<<<<< HEAD
-		_delay_ms(100);
-=======
+
 		//When Closing make 50ms delay until current sensing goes (because of current spike when turning on motor) 
 		//but still check if button is pressed if for whatever reason the valve stands closely before the button
 		uint16_t i = 0;
@@ -78,7 +72,7 @@ void closeValve(){
 		}
 
 		//After 50ms turn on current sensing
->>>>>>> d2a009c0bc6de217d86a0f1a1fa7a3a3a4d37f69
+
 		ADC_0_startMotorCurrentCheck();
 
 		//Add Timeout here
