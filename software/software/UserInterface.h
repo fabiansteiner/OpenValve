@@ -17,7 +17,7 @@ typedef enum {
 	CHANGETHRESHOLD = 3, 
 	CHANGEINTERVAL = 4, 
 	SHOWBATTERY = 5, 
-	CHANGESTATE = 6}  UIstate;
+	TRANSITION = 6}  UIstate;
 	
 typedef struct{
 	uint16_t tresholdLow;

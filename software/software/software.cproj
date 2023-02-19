@@ -141,6 +141,12 @@
     <Compile Include="EEPROM.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="LEDs.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="UserInterface.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="UserInterface.h">
       <SubType>compile</SubType>
     </Compile>

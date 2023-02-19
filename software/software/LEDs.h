@@ -9,9 +9,16 @@
 #ifndef LEDS_H_
 #define LEDS_H_
 
+#include "UserInterface.h"
+
+#define PIN_GREENLED 3		//PORTB
+#define PIN_REDLED 7		//PORTA
+
 void initLEDs();
 
-void animateTransition();	//Blink green led two times
+void animateTransition(UIstate nextState);	//Blink green led two times
+
+void animateBatteryLevel(uint16_t ADCMeasurement);		//From red to green to red to battery state
 
 void animateSelectThreshold();	//Pulsate Brown
 
