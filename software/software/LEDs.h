@@ -16,13 +16,13 @@
 
 void initLEDs();
 
-void animateTransition(UIstate nextState);	//Blink green led two times
+void animateTransition();	//Blink green led two times
 
 void animateBatteryLevel(uint16_t ADCMeasurement);		//From red to green to red to battery state
 
-void animateSelectThreshold();	//Pulsate Brown
+void animateSelectThreshold();	//Glow Orange
 
-void animateSelectInterval();	//Pulsate RED
+void animateSelectInterval();	//Glow Red
 
 void animateChangeSoilThreshold(uint16_t currentThresholdLevel);	//Blink as many times as currentThresholdLevel, then stop for a second
 

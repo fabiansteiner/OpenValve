@@ -14,7 +14,8 @@
 
 volatile uint16_t adc_result_current = 0;
 volatile uint16_t adc_result_soil = 0;
-uint8_t stateADC = MEASURESOIL;
+
+uint8_t stateADC = FREE;
 
 uint16_t read_adc_sample_accumulator()
 {
@@ -24,9 +25,8 @@ uint16_t read_adc_sample_accumulator()
 
 void ADC_0_startMotorCurrentCheck()
 {
-	while(stateADC != MEASURESOIL);
 	
-	stateADC = CURRSENSING;
+	stateADC = OCCUPIED;
 	ADC0.CTRLC = ADC_PRESC_DIV16_gc								/* CLK_PER divided by 16 */
 	| ADC_REFSEL_VDDREF_gc;										/* VDD as reference */
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp | 1 << ADC_FREERUN_bp;		//Enable ADC, Enable ADC Freerun mode
@@ -36,7 +36,7 @@ void ADC_0_startMotorCurrentCheck()
 }
 
 uint16_t ADC_0_readSoilMoisture(){
-	if(stateADC == MEASURESOIL){
+	if(stateADC == FREE){
 		ADC0.CTRLC = ADC_PRESC_DIV16_gc								/* CLK_PER divided by 16 */
 		| ADC_REFSEL_INTREF_gc;										/* VDD as reference */
 		ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
@@ -46,18 +46,37 @@ uint16_t ADC_0_readSoilMoisture(){
 		
 		VREF_CTRLA = VREF_ADC0REFSEL_1V1_gc;						//Set internal ADC Reference to 1.1V
 		
-		PORTA_OUTSET = (1<<PIN_SOILSENSORON);
-		_delay_ms(300);
-		
 		ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
 		while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
 		adc_result_soil = read_adc_sample_accumulator();									//Read Result
 		ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
 		
-		PORTA_OUTCLR = (1<<PIN_SOILSENSORON);						//Turn off transistor
 	}
 	
 	return adc_result_soil;
+	
+}
+
+uint16_t ADC_0_readBatteryVoltage(){
+	
+	uint16_t adc_result_battery = 0;
+	
+	while(stateADC == OCCUPIED);								//Wait until motor is done driving
+	
+	ADC0.CTRLC = ADC_PRESC_DIV16_gc								/* CLK_PER divided by 16 */
+	| ADC_REFSEL_VDDREF_gc;										/* VDD as reference */
+	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
+	ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
+	ADC0.MUXPOS  = PIN_BATTERYSENSING;							//Select channel
+	ADC0.INTCTRL &= ~ADC_RESRDY_bm;								//Disable Interrupt Vector
+		
+	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
+	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
+	adc_result_battery = read_adc_sample_accumulator();			//Read Result
+	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
+	
+	
+	return adc_result_battery;
 	
 }
 
@@ -95,7 +114,7 @@ ISR(ADC0_RESRDY_vect){
 	}else{
 		//Disable ADC
 		ADC0.CTRLA &= ~(1 << ADC_ENABLE_bp);
-		stateADC = MEASURESOIL;
+		stateADC = FREE;
 		
 	}
 	

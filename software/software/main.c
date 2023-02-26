@@ -17,55 +17,45 @@ int main(void)
 {
 	
 	sei();
-
-	initLEDs();
-	uart_init(9600);
-	//initADC();
-	//initializeValve();
 	
-	uint8_t level = 1;
-	animateChangeSoilThreshold(8);
+	PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Switch on soil mositure sensor
+	_delay_ms(50);
+	
+	initLEDs();
+	//uart_init(9600);
+	initUI();
+	initADC();
+	initializeValve();
+	
+	uint16_t SM;
+	
+	
+	
     while (1) 
     {
 		
-		/*
-		animateBatteryLevel(level*8);
-		_delay_ms(10000);
-		animateTransition(SHOWBATTERY);
-		_delay_ms(500);
-		animateSelectThreshold();
-		_delay_ms(2000);
-		animateTransition(SHOWBATTERY);
-		_delay_ms(500);
-		animateChangeSoilThreshold(level);
-		_delay_ms(10000);
-		animateTransition(SHOWBATTERY);
-		_delay_ms(500);
-		stopLEDs();
-		_delay_ms(10000);
-		*/
-
-		level++;
-		if (level > 5) level=1;
-
-
-		/*
-		if(ADC_0_readSoilMoisture() >= 512){
-			//PORTA_OUTSET = (1<<7);
+		senseMagneticSwitch();
+		countUITimeOut();
+		_delay_ms(MAINLOOP_DELAY);
+		
+		SM = ADC_0_readSoilMoisture();
+		
+	
+		if(SM >= getCurrentThresholds().thresholdClose){
 			if(getValveState() == OPEN || getValveState()== UNDEFINED){
 				closeValve();
 			}
-		}else{
-			//PORTA_OUTCLR = (1<<7);
+		}else if (SM <= getCurrentThresholds().tresholdOpen){
 			if(getValveState() == CLOSED){
 				openValve();
 			}
 		}
 		
 		
-		_delay_ms(10);
-		*/
-    }
+		
+		
+		
+	}
 }
 
 

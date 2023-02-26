@@ -13,7 +13,6 @@
 volatile UIstate currentState;
 
 volatile uint16_t animationCounter = 0;
-UIstate nextStateCall;
 
 #define ONESTEP 66
 #define HALFSTEP 33
@@ -102,7 +101,7 @@ ISR(TCA0_OVF_vect)
 		}else{
 			//Turn off counter
 			TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
-			// TODO: Switch to the next state 
+			changeUIState(0);
 		}
 		
 	}else if(currentState == SHOWBATTERY){
@@ -164,8 +163,8 @@ void initLEDs(){
 }
 
 //Blink green led two times and then switch to passed state
-void animateTransition(UIstate nextState){
-	nextStateCall = nextState;
+void animateTransition(){
+
 	currentState = TRANSITION;
 
 	//Set overflow interval to 250ms
@@ -188,6 +187,7 @@ void animateSelectThreshold(){
 	currentState = SELECTTHRESHOLD;
 
 	//TODO: Later maybe Pulsate Brown
+	resetTimerSettings();
 	PORTB.OUTSET = (1<<PIN_GREENLED);
 	PORTA.OUTSET = (1<<PIN_REDLED);
 }
@@ -196,6 +196,7 @@ void animateSelectInterval(){
 	currentState = SELECTINTERVAL;
 
 	//Later maybe Pulsate RED
+	resetTimerSettings();
 	PORTA.OUTSET = (1<<PIN_REDLED);
 }
 
