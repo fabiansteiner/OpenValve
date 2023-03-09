@@ -15,7 +15,7 @@
 volatile uint16_t adc_result_current = 0;
 volatile uint16_t adc_result_soil = 0;
 
-uint8_t stateADC = FREE;
+volatile uint8_t stateADC = FREE;
 
 uint16_t read_adc_sample_accumulator()
 {
@@ -102,7 +102,7 @@ ISR(ADC0_RESRDY_vect){
 	adc_result_current = read_adc_sample_accumulator();
 
 	if(getValveState() == CLOSING){
-		if(adc_result_current >= 800){
+		if(adc_result_current >= 700){	//Was previously 800
 			PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
 			setValveState(CLOSED);
 		}

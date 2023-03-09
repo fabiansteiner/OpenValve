@@ -16,7 +16,7 @@
 #define PA5_INTERRUPT PORTA.INTFLAGS & PIN5_bm
 #define PA5_CLEAR_INTERRUPT_FLAG PORTA.INTFLAGS &= PIN5_bm
 
-uint8_t state = UNDEFINED;
+volatile uint8_t state = OPEN;
 
 void initializeValve(){
 	
@@ -25,6 +25,8 @@ void initializeValve(){
 	
 	PORTA.DIR &= ~ PIN5_bm;												//Set as input
 	PORTA.PIN5CTRL |= PORT_PULLUPEN_bm | PORT_ISC_FALLING_gc;			//Enable Pull-UP & enable interrupt on falling edge
+	
+	_delay_ms(100);														//Let the pull-up take effect
 
 
 	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
@@ -42,11 +44,10 @@ void openValve(){
 
 		_delay_ms(50);
 		ADC_0_startMotorCurrentCheck();
-		_delay_ms(300);
+		_delay_ms(800);
 
 		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 		state = OPEN;
-		_delay_ms(500);
 	}
 }
 
@@ -58,10 +59,10 @@ void closeValve(){
 		PORTB_OUTSET = (1<<PIN_MOTORPLUS); // set HIGH;
 		
 
-		//When Closing make 50ms delay until current sensing goes (because of current spike when turning on motor) 
+		//When Closing make 100ms delay until current sensing goes (because of current spike when turning on motor) 
 		//but still check if button is pressed if for whatever reason the valve stands closely before the button
 		uint16_t i = 0;
-		for (i=0; i<500; i++)
+		for (i=0; i<1000; i++)
 		{
 			if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
 				PORTB_OUTCLR = (1<<PIN_MOTORPLUS);

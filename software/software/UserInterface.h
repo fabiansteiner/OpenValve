@@ -14,6 +14,7 @@
 #define PIN_MAGNETSWITCH 0		//PORTB
 #define MAINLOOP_DELAY 10
 
+
 typedef enum {
 	SELECTTHRESHOLD = 1, 
 	SELECTINTERVAL= 2,
@@ -22,6 +23,13 @@ typedef enum {
 	SHOWBATTERY = 5, 
 	TRANSITION = 6,
 	SHOWNOTHING = 7}  UIstate;
+	
+typedef enum {
+	SEC4 = 5,
+	SEC16 = 4,
+	MIN1 = 3,
+	MIN5 = 2,
+	MIN60 = 1}  wakeUpInterval;
 	
 typedef struct{
 	uint16_t tresholdOpen;
@@ -33,12 +41,14 @@ void initUI();
 void changeUIState(uint8_t longpress);
 
 void senseMagneticSwitch();
+
 void countUITimeOut();
 
 thresholds getCurrentThresholds();
 
-uint32_t getIntervalMS();
+uint8_t getCurrentInterval();
 
+UIstate getUIState();
 
 
 

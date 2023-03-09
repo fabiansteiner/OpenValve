@@ -21,7 +21,7 @@ UIstate previousState;
 
 
 uint8_t soilLevel = 1;
-uint8_t interval = 1;
+uint8_t interval = 5;
 
 uint16_t buttonTimeCounter = 0;
 uint8_t alreadyPressed = 0;
@@ -59,6 +59,15 @@ void increaseInterval(){
 
 thresholds getCurrentThresholds(){
 	return currentThresholds;
+}
+
+uint8_t getCurrentInterval(){
+	
+	return interval;
+}
+
+UIstate getUIState(){
+	return uiState;
 }
 
 uint8_t getBatteryADC(){
@@ -190,7 +199,7 @@ void senseMagneticSwitch(){
 		}
 	}else{
 		if(buttonTimeCounter>=0 && !alreadyPressed){
-			if(buttonTimeCounter >= 5){
+			if(buttonTimeCounter >= 2){
 				changeUIState(0);
 			}
 		}
@@ -209,7 +218,7 @@ void countUITimeOut(){
 			secondCounter++;
 			milliSecondCounter = 0;
 		}
-		if(secondCounter >= 15){
+		if(secondCounter >= 8){
 			if(uiState == SHOWBATTERY){
 				uiState = SHOWNOTHING;
 				stopLEDs();
