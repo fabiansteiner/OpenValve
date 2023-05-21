@@ -102,14 +102,18 @@ ISR(ADC0_RESRDY_vect){
 	adc_result_current = read_adc_sample_accumulator();
 
 	if(getValveState() == CLOSING){
-		if(adc_result_current >= 700){	//Was previously 800
+		if(adc_result_current >= 1000){	//Was previously 800
 			PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
 			setValveState(CLOSED);
+			ADC0.CTRLA &= ~(1 << ADC_ENABLE_bp);
+			stateADC = FREE;
 		}
 	}else if(getValveState() == OPENING){
 		if(adc_result_current >= 400){
 			PORTB_OUTCLR = (1<<PIN_MOTORMINUS);
 			setValveState(OPEN);
+			ADC0.CTRLA &= ~(1 << ADC_ENABLE_bp);
+			stateADC = FREE;
 		}
 	}else{
 		//Disable ADC
@@ -119,5 +123,5 @@ ISR(ADC0_RESRDY_vect){
 	}
 	
 	
-	//ADC0.INTFLAGS = ADC_RESRDY_bm;
+	ADC0.INTFLAGS = ADC_RESRDY_bm;
 }

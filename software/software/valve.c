@@ -16,7 +16,7 @@
 #define PA5_INTERRUPT PORTA.INTFLAGS & PIN5_bm
 #define PA5_CLEAR_INTERRUPT_FLAG PORTA.INTFLAGS &= PIN5_bm
 
-volatile uint8_t state = OPEN;
+volatile valveState motState = OPEN;
 
 void initializeValve(){
 	
@@ -30,80 +30,74 @@ void initializeValve(){
 
 
 	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
-		state = CLOSED;
+		motState = CLOSED;
 	}
 
 	
 }
 
 void openValve(){
-	if(state == CLOSED){
+	if(motState == CLOSED){
 		//drive motor for 50ms
-		state = OPENING;
+		motState = OPENING;
 		PORTA_OUTSET = (1<<PIN_MOTORMINUS); // set HIGH;
 
 		_delay_ms(50);
 		ADC_0_startMotorCurrentCheck();
-		_delay_ms(800);
+		_delay_ms(500);
 
 		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
-		state = OPEN;
+		motState = OPEN;
+		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
 
 
 void closeValve(){
-	//drive motor as long as button is pressed (timeout 2s)
-	if(state == OPEN || state == UNDEFINED){
-		state = CLOSING;
+
+	if(motState == OPEN || motState == UNDEFINED){
+		motState = CLOSING;
 		PORTB_OUTSET = (1<<PIN_MOTORPLUS); // set HIGH;
 		
-
-		//When Closing make 100ms delay until current sensing goes (because of current spike when turning on motor) 
-		//but still check if button is pressed if for whatever reason the valve stands closely before the button
-		uint16_t i = 0;
-		for (i=0; i<1000; i++)
-		{
-			if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
-				PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
-				state = CLOSED;
-				break;
-			}
-			_delay_us(100);
-		}
-
-		//After 50ms turn on current sensing
+		_delay_ms(100);
 
 		ADC_0_startMotorCurrentCheck();
+		
+		
+		//Wait until actually closed
+		//_delay_ms(1500);	//Workaround because checking if motState is closed does not work for whatever reason
+		while(motState == CLOSING);
+		//_delay_ms(20);
 
-		//Add Timeout here
+
+		//TODO: Add Timeout here
 	}
 	
 }
 
-void changeMotorState(){
-	if(state == OPEN || state == UNDEFINED){
+void changeMotormotState(){
+	if(motState == OPEN || motState == UNDEFINED){
 		closeValve();
-	}else if(state == CLOSED){
+	}else if(motState == CLOSED){
 		openValve();
 	}
 }
 
 
 valveState getValveState(){
-	return state;
+	return motState;
 }
 
 void setValveState(valveState vState){
-	state = vState;
+	motState = vState;
 }
 
 ISR(PORTA_PORT_vect)
 {
-	if(PA5_INTERRUPT && state == CLOSING)
+	if(PA5_INTERRUPT && motState == CLOSING)
 	{
 		PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
-		state = CLOSED;
+		motState = CLOSED;
 		
 	}
 	PA5_CLEAR_INTERRUPT_FLAG;

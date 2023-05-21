@@ -66,11 +66,10 @@ ISR(RTC_PIT_vect)
 ISR(PORTB_PORT_vect)
 {
 	
-	
 	if(PB0_INTERRUPT)
 	{
 		if(PB0_LOW){
-			if(mState != ACTIVE){
+			if(mState != ACTIVE && mState != PERIODICWAKEUP){
 				disablePITInterrupt();
 				mState = ACTIVE;
 				changeUIState(0);
@@ -100,45 +99,40 @@ void initSleep(void)
 
 }
 
+void changePIT(uint8_t prescaler, uint8_t cycles){
+	while((RTC.PITSTATUS & (1<<0)) != 0);
+	RTC.PITCTRLA = prescaler | (1<<0);
+	while((RTC.PITSTATUS & (1<<0)) != 0);
+	wakeUpCycles = cycles;
+}
+
 void changePITInterval(){
 	if(getValveState() == OPEN){
 		switch(getCurrentInterval()){
 			case SEC4:
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				RTC.PITCTRLA = RTC_PRESCALER_DIV2048_gc | (1<<0);
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				wakeUpCycles = 1;
+				changePIT(RTC_PRESCALER_DIV2048_gc, 1);
 				break;
 			case SEC16:
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				RTC.PITCTRLA = RTC_PRESCALER_DIV8192_gc | (1<<0);
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				wakeUpCycles = 1;
+				changePIT(RTC_PRESCALER_DIV8192_gc, 1);
 				break;
 			case MIN1:
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				RTC.PITCTRLA = RTC_PRESCALER_DIV16384_gc | (1<<0);
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				wakeUpCycles = 2;
+				changePIT(RTC_PRESCALER_DIV16384_gc, 2);
 				break;
 			case MIN5:
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				RTC.PITCTRLA = RTC_PRESCALER_DIV16384_gc | (1<<0);
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				wakeUpCycles = 10;
+				changePIT(RTC_PRESCALER_DIV16384_gc, 10);
 				break;
 			case MIN60: 
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				RTC.PITCTRLA = RTC_PRESCALER_DIV16384_gc | (1<<0);
-				while((RTC.PITSTATUS & (1<<0)) != 0);
-				wakeUpCycles = 120;
+				changePIT(RTC_PRESCALER_DIV16384_gc, 120);
 				break;
 		}
 	}else if(getValveState() == CLOSED){
-		while((RTC.PITSTATUS & (1<<0)) != 0);
-		RTC.PITCTRLA = RTC_PRESCALER_DIV2048_gc | (1<<0);
-		while((RTC.PITSTATUS & (1<<0)) != 0);
-		wakeUpCycles = 1;
+		switch(getCurrentInterval()){
+			case SEC4:
+				changePIT(RTC_PRESCALER_DIV2048_gc, 1);
+				break;
+			default:
+				changePIT(RTC_PRESCALER_DIV16384_gc, 120);
+		}
 	}
 	
 }
@@ -146,10 +140,7 @@ void changePITInterval(){
 
 int main(void)
 {
-	
 	sei();
-	
-	PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Switch on soil mositure sensor
 	
 	
 	initSleep();
@@ -177,9 +168,11 @@ int main(void)
 
 			}
 			
-			_delay_ms(MAINLOOP_DELAY);
+			_delay_ms(MAINLOOP_DELAY/2);
+			PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
+			_delay_ms(MAINLOOP_DELAY/2);
 			SM = ADC_0_readSoilMoisture();
-			
+			PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
 			
 			if(SM >= getCurrentThresholds().thresholdClose){
 				if(getValveState() == OPEN){
@@ -194,22 +187,20 @@ int main(void)
 			}
 			
 			if(mState == PERIODICWAKEUP){
-				while(getValveState() != OPEN && getValveState() != CLOSED);	//If motor is still driving prevent going to sleep, cause ADC is disabled in sleep mode
-				mState = SLEEP;
 				if (motorStateChanged == 1) {changePITInterval();}
 				sleepCounter = 0;
 				motorStateChanged = 0;
+				mState = SLEEP;
 				enablePORTBInterrupt();
 				sleep_mode();
 				
 			}else if(mState == ACTIVE){
 				
 				if(getUIState() == SHOWNOTHING){
-					while(getValveState() != OPEN && getValveState() != CLOSED); //If motor is still driving prevent going to sleep, cause ADC is disabled in sleep mode
-					mState = SLEEP;
 					changePITInterval();
 					sleepCounter = 0;
 					motorStateChanged = 0;
+					mState = SLEEP;
 					enablePITInterrupt();
 					sleep_mode();
 				}
@@ -219,37 +210,5 @@ int main(void)
 			sleep_mode();
 		}
 		
-		
-		
-		
-		
-		
-		
-		
 	}
 }
-
-
-/*
-
-		//Switch LED with the magnet
-		if((PORTB_IN & (1<<0))==0){
-			PORTA_OUTSET = (1<<7);
-			}else{
-			PORTA_OUTCLR = (1<<7);
-		}
-
-		//Switch LED when motor stop button is pressed
-		if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
-			PORTB_OUTSET = (1<<3);
-			}else{
-			PORTB_OUTCLR = (1<<3);
-		}
-
-		//Switching motor state with the magnet
-		if((PORTB_IN & (1<<0))==0){
-			 _delay_ms(5);
-			 while((PORTB_IN & (1<<0))==0);
-			 changeMotorState();
-		}
-		*/

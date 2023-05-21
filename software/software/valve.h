@@ -20,7 +20,7 @@
 #define PIN_MOTORSTOP 5		//PORTA
 
 
-typedef enum {UNDEFINED=1, OPEN=2, CLOSED=3, CURRERROR=4, OPENING =5, CLOSING = 6}  valveState;
+typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, CURRERROR=10, OPENING = 20, CLOSING = 40}  valveState;
 	
 	
 //Figure out state of valve, if not closed, close it
