@@ -17,6 +17,11 @@
 #include <string.h>
 #include "valve.h"
 
+#define DEBUG_ON 1
+#define DEBUG_OFF 2
+
+#define DEBUG_MODE DEBUG_OFF
+
 #define USART1_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 
 ////////////////////////////////////////////////////////////////////////

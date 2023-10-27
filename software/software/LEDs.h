@@ -13,23 +13,13 @@
 
 #define PIN_GREENLED 3		//PORTB
 #define PIN_REDLED 7		//PORTA
+#define BLUE_LED 2		//PORTB
+
+typedef enum {NO_ANIMATION, A_BATTERY, A_SELECTTHRESHOLD , A_SELECTINTERVAL,A_CHANGETHRESHOLD,A_CHANGEINTERVAL, A_TRANSITIONING} currentLEDAnimation;
 
 void initLEDs();
-
-void animateTransition();	//Blink green led two times
-
-void animateBatteryLevel(uint16_t ADCMeasurement);		//From red to green to red to battery state
-
-void animateSelectThreshold();	//Glow Orange
-
-void animateSelectInterval();	//Glow Red
-
-void animateChangeSoilThreshold(uint16_t currentThresholdLevel);	//Blink as many times as currentThresholdLevel, then stop for a second
-
-void animateChangeInterval(uint16_t currentIntervalLevel);			//Blink led red, the higher the interval level the faster it blinks
-
-void stopLEDs();
-
+void cycleLEDAnimation(state_change change);
+currentLEDAnimation getLEDAnimation();
 
 
 #endif /* LEDS_H_ */

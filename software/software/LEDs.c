@@ -9,9 +9,13 @@
 
 #include "LEDs.h"
 #include "UserInterface.h"
+#include "valve.h"
+#include "ADC.h"
 
-volatile UIstate currentState;
 
+void (*func_ptr)(void);
+
+volatile currentLEDAnimation ongoingAnimation = NO_ANIMATION;
 volatile uint16_t animationCounter = 0;
 
 #define ONESTEP 66
@@ -26,10 +30,15 @@ volatile uint16_t greenBrightness = 132;
 volatile uint8_t msCounter = 0;
 volatile uint8_t countingUp = 1;
 
-volatile uint8_t thresholdLevel;
 
-
-
+void showBlueLED();
+void animateTransition();	//Blink green led two times
+void animateBatteryLevel();		//From red to green to red to battery state
+void animateSelectThreshold();	//Glow Orange
+void animateSelectInterval();	//Glow Red
+void animateChangeSoilThreshold();	//Blink as many times as currentThresholdLevel, then stop for a second
+void animateChangeInterval();			//Blink led red, the higher the interval level the faster it blinks
+void stopLEDs();
 
 
 void cycleBatteryLevelAnimation(){
@@ -94,30 +103,30 @@ void cycleBatteryLevelAnimation(){
 
 ISR(TCA0_OVF_vect)
 {
-	if (currentState == TRANSITION){
+	if (ongoingAnimation == A_TRANSITIONING){
 		if (animationCounter < 4){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			animationCounter++;
 		}else{
 			//Turn off counter
 			TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
-			changeUIState(0);
+			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 		
-	}else if(currentState == SHOWBATTERY){
+	}else if(ongoingAnimation == A_BATTERY){
 		cycleBatteryLevelAnimation();
-	}else if(currentState == CHANGETHRESHOLD){
-		if (animationCounter < thresholdLevel*2){
+	}else if(ongoingAnimation == A_CHANGETHRESHOLD){
+		if (animationCounter < soilLevel*2){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			PORTA.OUTTGL = (1<<PIN_REDLED);
 			animationCounter++;
 		}else{
 			animationCounter++;
-			if(animationCounter > thresholdLevel*2+8){
+			if(animationCounter > soilLevel*2+8){
 				animationCounter = 0;
 			}
 		}
-	}else if (currentState == CHANGEINTERVAL){
+	}else if (ongoingAnimation == A_CHANGEINTERVAL){
 		PORTA.OUTTGL = (1<<PIN_REDLED);
 	}
 
@@ -135,6 +144,7 @@ void resetTimerSettings(){
 	//Reset LEDs
 	PORTA.OUTCLR = (1<<PIN_REDLED);
 	PORTB.OUTCLR = (1<<PIN_GREENLED);
+	PORTB.OUTCLR = (1<<BLUE_LED);
 
 	//Reset counters used for LED animation
 	animationCounter = 0;
@@ -156,26 +166,78 @@ void resetTimerSettings(){
 void initLEDs(){
 	PORTB_DIRSET = (1<<PIN_GREENLED);
 	PORTA_DIRSET = (1<<PIN_REDLED);
+	PORTB_DIRSET = (1<<BLUE_LED);
 
 	TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;			//Single mode
 	TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;	//Normal operation, no waveform or other extras
 	TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);		//Count steps, not events
 }
 
+void showBlueLED(){
+	if(getValveState() == OPEN){
+		PORTB_OUTSET = (1<<BLUE_LED);
+		}else if (getValveState() == CLOSED){
+		PORTB_OUTCLR = (1<<BLUE_LED);
+	}
+}
+
+void cycleLEDAnimation(state_change change){
+	
+	showBlueLED();
+	
+	switch(change){
+		case FROM_SHOWNOTHING_TO_SHOWBATTERY: animateBatteryLevel();
+			break;
+		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition();	//Transition
+			break;
+		case FROM_SELECTTHRESHOLD_TO_SELECTINTERVAL: animateSelectInterval();
+			break;
+		case FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD: func_ptr = &animateChangeSoilThreshold;		animateTransition(); //Transition
+			break;
+		case FROM_SELECTINTERVAL_TO_SELECTTHRESHOLD: animateSelectThreshold();
+			break;
+		case FROM_SELECTINTERVAL_TO_CHANGEINTERVAL: func_ptr = &animateChangeInterval;				animateTransition(); //Transition
+			break;
+		case THRESHOLD_CHANGED: animateChangeSoilThreshold();
+			break;
+		case INTERVAL_CHANGED: animateChangeInterval();
+			break;
+		case UI_OFF:  func_ptr = &stopLEDs; animateTransition();	//Transition
+			break;
+		case UI_OFF_WITHOUT_CONFIRMING: stopLEDs();	//Transition
+			break;
+		default:
+			break;
+		
+	}
+
+	
+
+	
+
+}
+
+
 //Blink green led two times and then switch to passed state
 void animateTransition(){
 
-	currentState = TRANSITION;
+	ongoingAnimation = A_TRANSITIONING;
 
 	//Set overflow interval to 250ms
 	resetTimerSettings();
 	TCA0.SINGLE.PER = 1000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+
+	
+	
 }
 
-void animateBatteryLevel(uint16_t ADCMeasurement){
-	currentState = SHOWBATTERY;
-	batteryLevel = ADCMeasurement;
+void animateBatteryLevel(){
+
+	
+	batteryLevel = getBatteryLevel();
+
+	ongoingAnimation = A_BATTERY;
 
 	//Set overflow interval to 50khz
 	resetTimerSettings();
@@ -184,38 +246,39 @@ void animateBatteryLevel(uint16_t ADCMeasurement){
 }
 
 void animateSelectThreshold(){
-	currentState = SELECTTHRESHOLD;
 
-	//TODO: Later maybe Pulsate Brown
+	
+	ongoingAnimation = A_SELECTTHRESHOLD;
+
 	resetTimerSettings();
 	PORTB.OUTSET = (1<<PIN_GREENLED);
 	PORTA.OUTSET = (1<<PIN_REDLED);
 }
 
 void animateSelectInterval(){
-	currentState = SELECTINTERVAL;
 
-	//Later maybe Pulsate RED
+
+	ongoingAnimation = A_SELECTINTERVAL;
+
 	resetTimerSettings();
 	PORTA.OUTSET = (1<<PIN_REDLED);
 }
 
-void animateChangeSoilThreshold(uint16_t currentThresholdLevel){
+void animateChangeSoilThreshold(){
+	ongoingAnimation = A_CHANGETHRESHOLD;
+	
 	//Blink as many times as currentThresholdLevel, then stop for a second
-	currentState = CHANGETHRESHOLD;
-	thresholdLevel = currentThresholdLevel;
-
 	resetTimerSettings();
 	TCA0.SINGLE.PER = 2700;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
 
-void animateChangeInterval(uint16_t currentIntervalLevel){
-	//Blink led red, the higher the interval level the faster it blinks
-	currentState = CHANGEINTERVAL;
-
+void animateChangeInterval(){
+	ongoingAnimation = A_CHANGEINTERVAL;
+	
+	//Blink led red, the higher the interval level the faster it blinks%
 	resetTimerSettings();
-	switch(currentIntervalLevel){
+	switch(interval){
 		case 1: TCA0.SINGLE.PER = 24000;
 			break;
 		case 2: TCA0.SINGLE.PER = 12000;
@@ -230,9 +293,13 @@ void animateChangeInterval(uint16_t currentIntervalLevel){
 
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 	
-
 }
 
 void stopLEDs(){
 	resetTimerSettings();
+	ongoingAnimation = NO_ANIMATION;
+}
+
+currentLEDAnimation getLEDAnimation(){
+	return ongoingAnimation;
 }

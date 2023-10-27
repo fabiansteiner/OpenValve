@@ -72,7 +72,8 @@ ISR(PORTB_PORT_vect)
 			if(mState != ACTIVE && mState != PERIODICWAKEUP){
 				disablePITInterrupt();
 				mState = ACTIVE;
-				changeUIState(0);
+				state_change changeOfState = changeUIState(SHORT);
+				cycleLEDAnimation(changeOfState);
 			}
 		}
 		PB0_CLEAR_INTERRUPT_FLAG;
@@ -163,8 +164,15 @@ int main(void)
     {
 		if (mState == ACTIVE || mState == PERIODICWAKEUP){
 			if(mState == ACTIVE){
-				senseMagneticSwitch();
-				countUITimeOut();
+				pressType button_press = senseMagneticSwitch();
+				
+				state_change changeOfState = changeUIState(button_press);
+				state_change timeOutStateChange = countUITimeOut();
+				if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
+				cycleLEDAnimation(changeOfState);
+				
+				
+				
 
 			}
 			
@@ -196,7 +204,7 @@ int main(void)
 				
 			}else if(mState == ACTIVE){
 				
-				if(getUIState() == SHOWNOTHING){
+				if(getLEDAnimation() == NO_ANIMATION){
 					changePITInterval();
 					sleepCounter = 0;
 					motorStateChanged = 0;

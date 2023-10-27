@@ -11,16 +11,11 @@
 #include "LEDs.h"
 #include "ADC.h"
 
-#define INPUT_START 516    // The lowest number of the range input.
-#define INPUT_END 930    // The largest number of the range input.
-#define OUTPUT_START 2 // The lowest number of the range output.
-#define OUTPUT_END 48  // The largest number of the range output.
-
-UIstate uiState;
-UIstate previousState;
+UIstate uiState = SHOWNOTHING;
+UIstate previousState = SHOWNOTHING;
 
 
-uint8_t soilLevel = 1;
+uint8_t soilLevel = 4;
 uint8_t interval = 5;
 
 uint16_t buttonTimeCounter = 0;
@@ -39,7 +34,6 @@ void changeThresholds(){
 }
 
 void initUI(){
-	uiState = SHOWNOTHING;
 	changeThresholds();
 }
 
@@ -70,137 +64,90 @@ UIstate getUIState(){
 	return uiState;
 }
 
-uint8_t getBatteryADC(){
-	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
-	uint8_t batteryLevel;
-	
-	//Convert adc value to battery level between 2 and 48
-	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9V, ADC will read 3V
-	//Assumption: Battery is empty at 5V and full at 9V, which is an ADC Value between 516 and 930
-	//Map ADC Values to battery level
-	if(adcVoltage > 930){
-		return OUTPUT_END;
-	}else if(adcVoltage < 516){
-		return OUTPUT_START;
-	}else{
-		batteryLevel = OUTPUT_START + ((adcVoltage - INPUT_START) * (OUTPUT_END - OUTPUT_START)) / (INPUT_END - INPUT_START);
-	}
-	
-	
-	return batteryLevel;
-}
 
-void changeUIState(uint8_t longpress){
+
+state_change changeUIState(pressType button_press){
 	//State machine
-	
-	milliSecondCounter = 0;
-	secondCounter = 0;
+	state_change change = NO_CHANGE;
 
-	switch(uiState) {
-		case SHOWNOTHING:
-			uiState = SHOWBATTERY;
-			animateBatteryLevel(getBatteryADC());
-			break;
+	if(button_press != NONE){
+		//User Pressed something, reset Timeout Variables
+		milliSecondCounter = 0;
+		secondCounter = 0;
 
-			
-		case SHOWBATTERY:
-			if(longpress){
-				previousState = SHOWBATTERY;
-				uiState = TRANSITION;
-				animateTransition();
-			}
-			break;
-		case SELECTTHRESHOLD:
-			if(longpress==0){
-				uiState = SELECTINTERVAL;
-				animateSelectInterval();
-			}else if (longpress==1){
-				previousState = SELECTTHRESHOLD;
-				uiState = TRANSITION;
-				animateTransition();
-			}
-			break;
-		case SELECTINTERVAL:
-			if(longpress==0){
-				uiState = SELECTTHRESHOLD;
-				animateSelectThreshold();
-			}else if (longpress==1){
-				previousState = SELECTINTERVAL;
-				uiState = TRANSITION;
-				animateTransition();
-			}
-			break;
-		case CHANGETHRESHOLD:
-			if(!longpress){
-				increaseThreshold();
-				animateChangeSoilThreshold(soilLevel);
-			}else if (longpress){
-				previousState = CHANGETHRESHOLD;
-				uiState = TRANSITION;
-				animateTransition();
-			}
-			break;
-		case CHANGEINTERVAL:
-			if(!longpress){
-				increaseInterval();
-				animateChangeInterval(interval);
-			}else if (longpress){
-				previousState = CHANGEINTERVAL;
-				uiState = TRANSITION;
-				animateTransition();
-			}
-			break;
-		case TRANSITION:
-			switch(previousState){
-				case SHOWBATTERY:
+		
+		previousState = uiState;
+
+		switch(uiState) {
+			case SHOWNOTHING:
+				uiState = SHOWBATTERY;
+				change = FROM_SHOWNOTHING_TO_SHOWBATTERY;
+				break;
+			case SHOWBATTERY:
+				if(button_press == LONG){
 					uiState = SELECTTHRESHOLD;
-					animateSelectThreshold();
-					break;
-				case SELECTTHRESHOLD:
+					change = FROM_SHOWBATTERY_TO_SELECTTHRESHOLD;
+				}
+				break;
+			case SELECTTHRESHOLD:
+				if(button_press == SHORT){
+					uiState = SELECTINTERVAL;
+					change = FROM_SELECTTHRESHOLD_TO_SELECTINTERVAL;
+				}else if (button_press == LONG){
 					uiState = CHANGETHRESHOLD;
-					animateChangeSoilThreshold(soilLevel);
-					break;
-				case SELECTINTERVAL:
+					change = FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD;
+				}
+				break;
+			case SELECTINTERVAL:
+				if(button_press == SHORT){
+					uiState = SELECTTHRESHOLD;
+					change = FROM_SELECTINTERVAL_TO_SELECTTHRESHOLD;
+				}else if (button_press == LONG){
 					uiState = CHANGEINTERVAL;
-					animateChangeInterval(interval);
-					break;
-				case CHANGETHRESHOLD:
+					change = FROM_SELECTINTERVAL_TO_CHANGEINTERVAL;
+				}
+				break;
+			case CHANGETHRESHOLD:
+				if(button_press == SHORT){
+					increaseThreshold();
+					change = THRESHOLD_CHANGED;
+				}else if (button_press == LONG){
 					uiState = SHOWNOTHING;
-					stopLEDs();
-					break;
-				case CHANGEINTERVAL:
+					change = UI_OFF;
+				}
+				break;
+			case CHANGEINTERVAL:
+				if(button_press == SHORT){
+					increaseInterval();
+					change = INTERVAL_CHANGED;
+				}else if (button_press == LONG){
 					uiState = SHOWNOTHING;
-					stopLEDs();
-					break;
-				case TRANSITION:
-					uiState = SHOWNOTHING;
-					stopLEDs();
-					break;
-				case SHOWNOTHING:
-					uiState = SHOWNOTHING;
-					stopLEDs();
-					break;
-					
-			}
-			break;
+					change = UI_OFF;
+				}
+				break;
+		}
 	}
+
+	return change;
 
 	
 }
 
 
-void senseMagneticSwitch(){
+pressType senseMagneticSwitch(){
+	pressType press = NONE;
+
 	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))==0){
 		buttonTimeCounter++;
 		if(buttonTimeCounter>=200 && !alreadyPressed){
-			changeUIState(1);
+			press = LONG;
 			buttonTimeCounter = 0;
 			alreadyPressed = 1;
 		}
 	}else{
 		if(buttonTimeCounter>=0 && !alreadyPressed){
 			if(buttonTimeCounter >= 2){
-				changeUIState(0);
+				press = SHORT;
 			}
 		}
 		
@@ -208,9 +155,13 @@ void senseMagneticSwitch(){
 		alreadyPressed = 0;
 		
 	}
+
+	return press;
 }
 
-void countUITimeOut(){
+state_change countUITimeOut(){
+	state_change change = NO_CHANGE;
+
 	if (uiState != SHOWNOTHING){
 		
 		milliSecondCounter = milliSecondCounter + MAINLOOP_DELAY;
@@ -220,13 +171,11 @@ void countUITimeOut(){
 		}
 		if(secondCounter >= 8){
 			if(uiState == SHOWBATTERY){
-				uiState = SHOWNOTHING;
-				stopLEDs();
+				change = UI_OFF_WITHOUT_CONFIRMING;
 			}else{
-				previousState = SHOWNOTHING;
-				uiState = TRANSITION;
-				animateTransition();
+				change = UI_OFF;
 			}
+			uiState = SHOWNOTHING;
 			
 			secondCounter = 0;
 			milliSecondCounter = 0;
@@ -235,6 +184,8 @@ void countUITimeOut(){
 		milliSecondCounter = 0;
 		secondCounter = 0;
 	}
+
+	return change;
 }
 
 

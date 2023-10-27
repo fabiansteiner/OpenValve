@@ -80,6 +80,26 @@ uint16_t ADC_0_readBatteryVoltage(){
 	
 }
 
+uint8_t getBatteryLevel(){
+	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
+	uint8_t batteryLevel;
+	
+	//Convert adc value to battery level between 2 and 48
+	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9V, ADC will read 3V
+	//Assumption: Battery is empty at 5V and full at 9V, which is an ADC Value between 516 and 930
+	//Map ADC Values to battery level
+	if(adcVoltage > 930){
+		return OUTPUT_END;
+		}else if(adcVoltage < 516){
+		return OUTPUT_START;
+		}else{
+		batteryLevel = OUTPUT_START + ((adcVoltage - INPUT_START) * (OUTPUT_END - OUTPUT_START)) / (INPUT_END - INPUT_START);
+	}
+	
+	
+	return batteryLevel;
+}
+
 
 
 
