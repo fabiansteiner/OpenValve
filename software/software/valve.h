@@ -19,10 +19,19 @@
 #define PIN_MOTORMINUS 6	//PORTA
 #define PIN_MOTORSTOP 5		//PORTA
 
+#define MAX_VOL 9.9
+#define MAX_CUR 1.0
 
-typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, CURRERROR=10, OPENING = 20, CLOSING = 40}  valveState;
-	
-	
+typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, OPENING = 20, CLOSING = 40}  valveState;
+typedef enum {NO_ERROR, LOW_VOLTAGE , HIGH_CURRENT, VALVE_TIMEOUT}  valveError;
+
+/*
+Errors Meanings
+	VOLTAGELOW:		When Voltage got too low (<3,9V) when the valve closed last time, But Valve is Closed and in Safe Position
+	HIGH_CURRENT:	When Current got too high when closing (the valve could potentially damage itself without this), But valve is PROBABLY closed and in safe position, Causes: Button is damaged or out of Range (Housing Deformation)
+	VALVE_TIMEOUT:	When the Motor was driving for more than 3 seconds and the valve is not closed AND did not get shut off because of high current, valve is PROBABLY open and in an unsafe position, Causes: Damaged Motor, Init Phase where user wants to bring motor shaft in good position
+*/
+
 //Figure out state of valve, if not closed, close it
 void initializeValve();
 

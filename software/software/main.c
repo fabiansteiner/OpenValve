@@ -170,10 +170,6 @@ int main(void)
 				state_change timeOutStateChange = countUITimeOut();
 				if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
 				cycleLEDAnimation(changeOfState);
-				
-				
-				
-
 			}
 			
 			_delay_ms(MAINLOOP_DELAY/2);
