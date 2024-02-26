@@ -11,6 +11,7 @@
 #include "UserInterface.h"
 #include "valve.h"
 #include "ADC.h"
+#include "common.h"
 
 
 void (*func_ptr)(void);
@@ -110,10 +111,13 @@ ISR(TCA0_OVF_vect)
 			//Wait a little bit
 			animationCounter++;
 		}else if (animationCounter >=4 && animationCounter<8){
-			//Blink 2 times Green or Red dependend on Timeout or confirmation
+			//Blink 2 times green or red dependend on Timeout or confirmation
 			if(ongoingAnimation == A_TRANSITIONING_CONF){PORTB.OUTTGL = (1<<PIN_GREENLED);}
 			else{PORTA.OUTTGL = (1<<PIN_REDLED);}
 			
+			animationCounter++;
+		}else if (animationCounter >=8 && animationCounter<12){
+			//Wait a little bit
 			animationCounter++;
 		}else{
 			//Turn off counter
@@ -121,9 +125,48 @@ ISR(TCA0_OVF_vect)
 			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 		
-		}else if(ongoingAnimation == A_BATTERY){
+	}else if(ongoingAnimation == A_TRANSITIONING_SHUTDOWN){
+		if (animationCounter < 2){
+				//Wait a little bit
+				animationCounter++;
+			}else if (animationCounter >=2 && animationCounter<12){
+				//Blink 5 times red 
+				PORTA.OUTTGL = (1<<PIN_REDLED);
+			
+				animationCounter++;
+			}else{
+				//Turn off counter
+				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+				(*func_ptr)(); //Call appropriate function that was assigned when changing the state
+		}
+	}else if(ongoingAnimation == A_TRANSITIONING_STARTUP){
+		if (animationCounter < 2){
+			PORTA.OUTTGL = (1<<PIN_REDLED); 
+			PORTB.OUTTGL = (1<<PIN_GREENLED);
+			PORTB.OUTTGL = (1<<BLUE_LED);
+			animationCounter++;
+		}else if (animationCounter >=2 && animationCounter<6){
+			//Wait a little bit
+			animationCounter++;
+		}else if (animationCounter >=6 && animationCounter<VERSION_ANIMATION_COUNT1){
+			//Toggle RED led to indicate MAJOR version
+			PORTA.OUTTGL = (1<<PIN_REDLED); 
+			animationCounter++;
+		}else if (animationCounter >=VERSION_ANIMATION_COUNT1 && animationCounter<VERSION_ANIMATION_COUNT2){
+			//Toggle green led to indicate Minor version
+			PORTB.OUTTGL = (1<<PIN_GREENLED);
+			animationCounter++;
+		}else if (animationCounter >=VERSION_ANIMATION_COUNT2 && animationCounter<VERSION_ANIMATION_COUNT3){
+			//Wait a bit
+			animationCounter++;
+		}else{
+			//Turn off counter
+			TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
+		}
+	}else if(ongoingAnimation == A_BATTERY){
 		cycleBatteryLevelAnimation();
-		}else if(ongoingAnimation == A_CHANGETHRESHOLD){
+	}else if(ongoingAnimation == A_CHANGETHRESHOLD){
 		if (animationCounter < soilLevel*2){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			//PORTA.OUTTGL = (1<<PIN_REDLED);
@@ -134,7 +177,7 @@ ISR(TCA0_OVF_vect)
 				animationCounter = 0;
 			}
 		}
-		}else if (ongoingAnimation == A_CHANGEINTERVAL){
+	}else if (ongoingAnimation == A_CHANGEINTERVAL){
 		PORTA.OUTTGL = (1<<PIN_REDLED);
 	}
 
@@ -186,6 +229,8 @@ void changeLEDAnimation(state_change change){
 	
 	
 	switch(change){
+		case UI_STARTUP: func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
+		break;
 		case FROM_SHOWNOTHING_TO_SHOWBATTERY: animateBatteryLevel();
 		break;
 		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition(LED_CONFIRM);	//Transition
@@ -206,9 +251,11 @@ void changeLEDAnimation(state_change change){
 		break;
 		case INTERVAL_CHANGED: animateChangeInterval();
 		break;
-		case UI_OFF:  func_ptr = &stopLEDs; animateTransition(LED_TIMEOUT);	//Transition
+		case UI_OFF:  func_ptr = &stopLEDs; animateTransition(LED_CONFIRM);	//Transition
 		break;
-		case UI_OFF_WITHOUT_CONFIRMING: stopLEDs();	//Transition
+		case UI_OFF_WITHOUT_CONFIRMING: func_ptr = &stopLEDs; animateTransition(LED_TIMEOUT);	//Transition
+		break;
+		case UI_SHUTDOWN: func_ptr = &stopLEDs; animateTransition(LED_SHUTDOWN);	//Transition
 		break;
 		default:
 		break;
@@ -235,17 +282,25 @@ void cycleLEDAnimation(){
 //Blink green led two times and then switch to passed state
 void animateTransition(uint8_t confirm){
 
-	if(confirm){
-		ongoingAnimation = A_TRANSITIONING_CONF;
-	}else{
-		ongoingAnimation = A_TRANSITIONING_TIMEOUT;
-	}
-	
-
 	//Set overflow interval to 250ms
 	resetTimerSettings();
 	TCA0.SINGLE.PER = 1000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+
+	if(confirm==LED_CONFIRM){
+		ongoingAnimation = A_TRANSITIONING_CONF;
+	}else if(confirm==LED_TIMEOUT){
+		ongoingAnimation = A_TRANSITIONING_TIMEOUT;
+	}else if(confirm==LED_SHUTDOWN){
+		ongoingAnimation = A_TRANSITIONING_SHUTDOWN;
+		TCA0.SINGLE.PER = 4000;
+	}else if(confirm==LED_STARTUP){
+		ongoingAnimation = A_TRANSITIONING_STARTUP;
+		TCA0.SINGLE.PER = 4000;
+	}
+	
+
+	
 
 	
 	
@@ -297,7 +352,7 @@ void animateSelectThreshold(){
 		ongoingAnimation = A_SELECTTHRESHOLD;
 	}
 	
-	animateBlinking('G', 500);
+	animateBlinking('G', 100);
 
 }
 
@@ -308,7 +363,7 @@ void animateSelectInterval(){
 		ongoingAnimation = A_SELECTINTERVAL;
 	}
 	
-	animateBlinking('R', 500);
+	animateBlinking('R', 100);
 
 
 }

@@ -85,6 +85,8 @@ void openValve(){
 		}
 		
 		PORTB_OUTSET = (1<<BLUE_LED);
+		//IGNORE ERROR STATES FOR DEV
+		error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
@@ -142,6 +144,8 @@ void closeValve(){
 		}
 	
 		PORTB_OUTCLR = (1<<BLUE_LED);
+		//IGNORE ERROR STATES FOR DEV
+		error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	
 	}

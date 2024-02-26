@@ -18,8 +18,7 @@ UIstate uiState = SHOWNOTHING;
 uint8_t soilLevel = 4;
 uint8_t interval = 5;
 
-uint16_t buttonTimeCounter = 0;
-uint8_t alreadyPressed = 0;
+
 thresholds currentThresholds;
 uint8_t secondCounter = 0;
 uint16_t milliSecondCounter = 0;
@@ -70,10 +69,13 @@ state_change changeUIState(pressType button_press){
 	//State machine
 	state_change change = NO_CHANGE;
 
-	if(button_press != NONE){
+	if(button_press != NONE && button_press != VERYLONG){
 		//User Pressed something, reset Timeout Variables
 		milliSecondCounter = 0;
 		secondCounter = 0;
+		
+		
+			
 
 		switch(uiState) {
 			case SHOWNOTHING:
@@ -132,6 +134,11 @@ state_change changeUIState(pressType button_press){
 			}
 			break;
 		}
+		
+		
+	}else if(button_press == VERYLONG){
+		uiState = SHOWNOTHING;
+		change = UI_SHUTDOWN;
 	}
 
 	return change;
@@ -141,16 +148,27 @@ state_change changeUIState(pressType button_press){
 
 
 pressType senseMagneticSwitch(){
+	static uint16_t buttonTimeCounter = 0;
+	static uint16_t buttonTimeCounterForSwitchOFF = 0;
+	static uint8_t alreadyPressed = 0;
 	pressType press = NONE;
 
 	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))==0){
 		buttonTimeCounter++;
+		buttonTimeCounterForSwitchOFF++;
+		
 		if(buttonTimeCounter>=150 && !alreadyPressed){
 			press = LONG;
 			buttonTimeCounter = 0;
 			alreadyPressed = 1;
 		}
-		}else{
+		
+		if(buttonTimeCounterForSwitchOFF>=600){
+			press = VERYLONG;
+			buttonTimeCounterForSwitchOFF = 0;
+			
+		}
+	}else{
 		if(buttonTimeCounter>=0 && !alreadyPressed){
 			if(buttonTimeCounter >= 2){
 				press = SHORT;
@@ -158,6 +176,7 @@ pressType senseMagneticSwitch(){
 		}
 		
 		buttonTimeCounter=0;
+		buttonTimeCounterForSwitchOFF=0;
 		alreadyPressed = 0;
 		
 	}
@@ -171,22 +190,23 @@ state_change countUITimeOut(){
 	if (uiState != SHOWNOTHING){
 		
 		milliSecondCounter = milliSecondCounter + MAINLOOP_DELAY;
+		
 		if(milliSecondCounter >= 1000){
 			secondCounter++;
 			milliSecondCounter = 0;
 		}
+		
 		if(secondCounter >= 16){
-			if(uiState == SHOWBATTERY){
-				change = UI_OFF_WITHOUT_CONFIRMING;
-				}else{
-				change = UI_OFF;
-			}
+			
+			change = UI_OFF_WITHOUT_CONFIRMING;
+				
 			uiState = SHOWNOTHING;
 			
 			secondCounter = 0;
 			milliSecondCounter = 0;
 		}
-		}else if (milliSecondCounter >= 0 || secondCounter >= 0){
+		
+	}else if (milliSecondCounter >= 0 || secondCounter >= 0){
 		milliSecondCounter = 0;
 		secondCounter = 0;
 	}

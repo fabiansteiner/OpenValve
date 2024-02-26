@@ -75,9 +75,14 @@ ISR(PORTB_PORT_vect)
 			if(mState != ACTIVE && mState != PERIODICWAKEUP){
 				buttonSensingOn = 0;
 				disablePITInterrupt();
-				mState = ACTIVE;
-				state_change changeOfState = changeUIState(SHORT);
-				changeLEDAnimation(changeOfState);
+				
+				if(mState == SLEEP){
+					
+					mState = ACTIVE;
+					state_change changeOfState = changeUIState(SHORT);
+					changeLEDAnimation(changeOfState);
+				}
+				
 			}
 		}else{
 			buttonSensingOn = 1;
@@ -144,6 +149,14 @@ void changePITInterval(){
 	
 }
 
+void switchOFF(){
+	disablePITInterrupt();
+	closeValve();
+	while(getLEDAnimation() != NO_ANIMATION);
+	mState = OFF;
+	sleep_mode();
+}
+
 
 int main(void)
 {
@@ -195,6 +208,8 @@ int main(void)
 				
 				changeLEDAnimation(changeOfState);
 				cycleLEDAnimation();
+				
+				if(button_press == VERYLONG){switchOFF(); continue;}
 			}
 			
 			if(manualIrrigation == 0){
@@ -243,6 +258,22 @@ int main(void)
 			}
 		}else if(mState == SLEEP){
 			sleep_mode();
+		}else if(mState == OFF){
+			
+			if(buttonSensingOn == 0){
+				
+				pressType button_press = senseMagneticSwitch();
+				//PORTB.OUTTGL = (1<<BLUE_LED);
+				if(button_press == VERYLONG){
+					
+					mState = ACTIVE;
+					changeUIState(SHORT);
+					changeLEDAnimation(UI_STARTUP);
+				}
+				_delay_ms(MAINLOOP_DELAY);
+			}else{
+				sleep_mode();
+			}
 		}
 		
 	}
