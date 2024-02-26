@@ -17,13 +17,16 @@
 typedef enum {
 	ACTIVE = 1,
 	PERIODICWAKEUP = 2,
-	SLEEP = 3
+	SLEEP = 3,
+	OFF = 4
 }  mainStates;
 
 
 volatile mainStates mState = SLEEP;
 volatile uint8_t wakeUpCycles = 1;
 volatile uint8_t sleepCounter = 0;
+volatile uint8_t manualIrrigation = 0;
+volatile uint8_t buttonSensingOn = 0;
 
 
 #define PB0_LOW !(PORTB.IN & PIN0_bm)
@@ -70,11 +73,14 @@ ISR(PORTB_PORT_vect)
 	{
 		if(PB0_LOW){
 			if(mState != ACTIVE && mState != PERIODICWAKEUP){
+				buttonSensingOn = 0;
 				disablePITInterrupt();
 				mState = ACTIVE;
 				state_change changeOfState = changeUIState(SHORT);
-				cycleLEDAnimation(changeOfState);
+				changeLEDAnimation(changeOfState);
 			}
+		}else{
+			buttonSensingOn = 1;
 		}
 		PB0_CLEAR_INTERRUPT_FLAG;
 		RTC.PITINTFLAGS = RTC_PI_bm;
@@ -164,31 +170,56 @@ int main(void)
     {
 		if (mState == ACTIVE || mState == PERIODICWAKEUP){
 			if(mState == ACTIVE){
-				pressType button_press = senseMagneticSwitch();
+				
+				pressType button_press = NONE;
+				
+				if(buttonSensingOn){
+					button_press = senseMagneticSwitch();
+				}
 				
 				state_change changeOfState = changeUIState(button_press);
-				state_change timeOutStateChange = countUITimeOut();
-				if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
-				cycleLEDAnimation(changeOfState);
-			}
-			
-			_delay_ms(MAINLOOP_DELAY/2);
-			PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
-			_delay_ms(MAINLOOP_DELAY/2);
-			SM = ADC_0_readSoilMoisture();
-			PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
-			
-			if(SM >= getCurrentThresholds().thresholdClose){
-				if(getValveState() == OPEN){
-					closeValve();
-					motorStateChanged = 1;
+				
+				//Do not count timeout when in manual irrigation mode
+				if(getUIState()!=MANUALIRRIGATION){
+					state_change timeOutStateChange = countUITimeOut();
+					if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
 				}
-			}else if (SM <= getCurrentThresholds().tresholdOpen){
-				if(getValveState() == CLOSED){
+				
+				if(changeOfState == FROM_SHOWBATTERY_TO_MANUALIRRIGATION){
+					manualIrrigation = 1;
 					openValve();
-					motorStateChanged = 1;
+				}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWBATTERY){
+					manualIrrigation = 0;
+					closeValve();
 				}
+				
+				changeLEDAnimation(changeOfState);
+				cycleLEDAnimation();
 			}
+			
+			if(manualIrrigation == 0){
+				_delay_ms(MAINLOOP_DELAY/2);
+				PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
+				_delay_ms(MAINLOOP_DELAY/2);
+				SM = ADC_0_readSoilMoisture();
+				PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
+				
+				if(SM >= getCurrentThresholds().thresholdClose){
+					if(getValveState() == OPEN){
+						closeValve();
+						motorStateChanged = 1;
+					}
+					}else if (SM <= getCurrentThresholds().tresholdOpen){
+					if(getValveState() == CLOSED){
+						openValve();
+						motorStateChanged = 1;
+					}
+				}
+			}else{
+				_delay_ms(MAINLOOP_DELAY);
+			}
+			
+			
 			
 			if(mState == PERIODICWAKEUP){
 				if (motorStateChanged == 1) {changePITInterval();}

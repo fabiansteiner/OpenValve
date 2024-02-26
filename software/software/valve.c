@@ -36,6 +36,8 @@ void initializeValve(){
 
 	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
 		motState = CLOSED;
+	}else{
+		PORTB_OUTSET = (1<<BLUE_LED);
 	}
 
 	
@@ -43,7 +45,7 @@ void initializeValve(){
 
 
 void openValve(){
-	if(motState == CLOSED){
+	if(motState == CLOSED && error == NO_ERROR){
 
 		uint16_t voltageADC;
 		uint16_t currentADC;
@@ -75,29 +77,31 @@ void openValve(){
 		}
 		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 		motState = OPEN;
+		
 
 		if(timeCounter>=1200){
-			motState = OPEN;
 			error = VALVE_TIMEOUT;
-			PORTA_OUTSET = (1<<PIN_REDLED);
+			//PORTA_OUTSET = (1<<PIN_REDLED);
 		}
-
 		
+		PORTB_OUTSET = (1<<BLUE_LED);
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
 
 
 void closeValve(){
+	
+	if(motState == OPEN && error == NO_ERROR){
+		
+		uint16_t voltageADC;
+		uint16_t currentADC;
+		float calc_volt = 5.0;
+		float calc_curr;
+		float calc_watt;
+		uint16_t timeCounter = 0;
 
-	uint16_t voltageADC;
-	uint16_t currentADC;
-	float calc_volt = 5.0;
-	float calc_curr;
-	float calc_watt;
-	uint16_t timeCounter = 0;
-
-	if(motState == OPEN){
+		
 		
 		motState = CLOSING;
 		PORTB_OUTSET = (1<<PIN_MOTORPLUS); // set HIGH;
@@ -117,30 +121,29 @@ void closeValve(){
 				motState = CLOSED;
 				error = HIGH_CURRENT;
 
-				PORTB_OUTSET = (1<<PIN_GREENLED);
+				//PORTB_OUTSET = (1<<PIN_GREENLED);
 			}
 
 			timeCounter++;
 
 		}
+		
 		if(timeCounter>=1400){
 			PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
 			motState = CLOSED;
 			error = VALVE_TIMEOUT;
-			PORTA_OUTSET = (1<<PIN_REDLED);
+			//PORTA_OUTSET = (1<<PIN_REDLED);
 		}
 
 		if(calc_volt <= 4.0){	//Triggers at 4.05
-			PORTB_OUTSET = (1<<BLUE_LED);
+			//PORTB_OUTSET = (1<<BLUE_LED);
+			motState = CLOSED;
 			error = LOW_VOLTAGE;
-			}else{
-			PORTB_OUTCLR = (1<<BLUE_LED);
 		}
-
-		
+	
+		PORTB_OUTCLR = (1<<BLUE_LED);
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
-
-
+	
 	}
 	
 }

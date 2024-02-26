@@ -32,7 +32,9 @@ volatile uint8_t countingUp = 1;
 
 
 void showBlueLED();
-void animateTransition();	//Blink green led two times
+void animateBlinking(char color, uint16_t delay);
+void animateManualIrrigation();
+void animateTransition(uint8_t confirm);	//Blink green led two times
 void animateBatteryLevel();		//From red to green to red to battery state
 void animateSelectThreshold();	//Glow Orange
 void animateSelectInterval();	//Glow Red
@@ -49,7 +51,7 @@ void cycleBatteryLevelAnimation(){
 		PORTA.OUTCLR = (1<<PIN_REDLED);
 		TCA0.SINGLE.PERBUF = 3300-greenBrightness;
 		cycle = 1;
-	}else{
+		}else{
 		PORTB.OUTCLR = (1<<PIN_GREENLED);
 		PORTA.OUTSET = (1<<PIN_REDLED);
 		TCA0.SINGLE.PERBUF = greenBrightness;
@@ -68,31 +70,31 @@ void cycleBatteryLevelAnimation(){
 				msCounter = 0;
 				
 				if (countingUp==1){
+					if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
+						greenBrightness = greenBrightness + HALFSTEP;
+						}else{
+						greenBrightness = greenBrightness + ONESTEP;
+					}
+					
+					if(greenBrightness >= MAX_LEVEL) countingUp = 0;
+					}else if (countingUp == 0){
+					if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
+						greenBrightness = greenBrightness - HALFSTEP;
+						}else{
+						greenBrightness = greenBrightness - ONESTEP;
+					}
+
+					if(greenBrightness <= MIN_LEVEL) countingUp = 2;
+					}else if (countingUp == 2){
+					if (greenBrightness <= batteryLevel*66) {
 						if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
 							greenBrightness = greenBrightness + HALFSTEP;
-						}else{
+							}else{
 							greenBrightness = greenBrightness + ONESTEP;
 						}
-						
-						if(greenBrightness >= MAX_LEVEL) countingUp = 0;
-					}else if (countingUp == 0){
-						if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
-							greenBrightness = greenBrightness - HALFSTEP;
-							}else{
-							greenBrightness = greenBrightness - ONESTEP;
-						}
-
-						if(greenBrightness <= MIN_LEVEL) countingUp = 2;
-					}else if (countingUp == 2){
-						if (greenBrightness <= batteryLevel*66) {
-							if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
-								greenBrightness = greenBrightness + HALFSTEP;
-								}else{
-								greenBrightness = greenBrightness + ONESTEP;
-							}
-						}
-						else {countingUp = 3;}
 					}
+					else {countingUp = 3;}
+				}
 			}
 		}
 		
@@ -103,9 +105,15 @@ void cycleBatteryLevelAnimation(){
 
 ISR(TCA0_OVF_vect)
 {
-	if (ongoingAnimation == A_TRANSITIONING){
+	if (ongoingAnimation == A_TRANSITIONING_CONF || ongoingAnimation == A_TRANSITIONING_TIMEOUT){
 		if (animationCounter < 4){
-			PORTB.OUTTGL = (1<<PIN_GREENLED);
+			//Wait a little bit
+			animationCounter++;
+		}else if (animationCounter >=4 && animationCounter<8){
+			//Blink 2 times Green or Red dependend on Timeout or confirmation
+			if(ongoingAnimation == A_TRANSITIONING_CONF){PORTB.OUTTGL = (1<<PIN_GREENLED);}
+			else{PORTA.OUTTGL = (1<<PIN_REDLED);}
+			
 			animationCounter++;
 		}else{
 			//Turn off counter
@@ -113,20 +121,20 @@ ISR(TCA0_OVF_vect)
 			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 		
-	}else if(ongoingAnimation == A_BATTERY){
+		}else if(ongoingAnimation == A_BATTERY){
 		cycleBatteryLevelAnimation();
-	}else if(ongoingAnimation == A_CHANGETHRESHOLD){
+		}else if(ongoingAnimation == A_CHANGETHRESHOLD){
 		if (animationCounter < soilLevel*2){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
-			PORTA.OUTTGL = (1<<PIN_REDLED);
+			//PORTA.OUTTGL = (1<<PIN_REDLED);
 			animationCounter++;
-		}else{
+			}else{
 			animationCounter++;
 			if(animationCounter > soilLevel*2+8){
 				animationCounter = 0;
 			}
 		}
-	}else if (ongoingAnimation == A_CHANGEINTERVAL){
+		}else if (ongoingAnimation == A_CHANGEINTERVAL){
 		PORTA.OUTTGL = (1<<PIN_REDLED);
 	}
 
@@ -144,7 +152,7 @@ void resetTimerSettings(){
 	//Reset LEDs
 	PORTA.OUTCLR = (1<<PIN_REDLED);
 	PORTB.OUTCLR = (1<<PIN_GREENLED);
-	PORTB.OUTCLR = (1<<BLUE_LED);
+	//PORTB.OUTCLR = (1<<BLUE_LED);
 
 	//Reset counters used for LED animation
 	animationCounter = 0;
@@ -173,41 +181,37 @@ void initLEDs(){
 	TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);		//Count steps, not events
 }
 
-void showBlueLED(){
-	if(getValveState() == OPEN){
-		PORTB_OUTSET = (1<<BLUE_LED);
-		}else if (getValveState() == CLOSED){
-		PORTB_OUTCLR = (1<<BLUE_LED);
-	}
-}
 
-void cycleLEDAnimation(state_change change){
+void changeLEDAnimation(state_change change){
 	
-	showBlueLED();
 	
 	switch(change){
 		case FROM_SHOWNOTHING_TO_SHOWBATTERY: animateBatteryLevel();
-			break;
-		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition();	//Transition
-			break;
+		break;
+		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition(LED_CONFIRM);	//Transition
+		break;
+		case FROM_SHOWBATTERY_TO_MANUALIRRIGATION: animateManualIrrigation();
+		break;
+		case FROM_MANUALIRRIGATION_TO_SHOWBATTERY: animateBatteryLevel();
+		break;
 		case FROM_SELECTTHRESHOLD_TO_SELECTINTERVAL: animateSelectInterval();
-			break;
-		case FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD: func_ptr = &animateChangeSoilThreshold;		animateTransition(); //Transition
-			break;
+		break;
+		case FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD: func_ptr = &animateChangeSoilThreshold;		animateTransition(LED_CONFIRM); //Transition
+		break;
 		case FROM_SELECTINTERVAL_TO_SELECTTHRESHOLD: animateSelectThreshold();
-			break;
-		case FROM_SELECTINTERVAL_TO_CHANGEINTERVAL: func_ptr = &animateChangeInterval;				animateTransition(); //Transition
-			break;
+		break;
+		case FROM_SELECTINTERVAL_TO_CHANGEINTERVAL: func_ptr = &animateChangeInterval;				animateTransition(LED_CONFIRM); //Transition
+		break;
 		case THRESHOLD_CHANGED: animateChangeSoilThreshold();
-			break;
+		break;
 		case INTERVAL_CHANGED: animateChangeInterval();
-			break;
-		case UI_OFF:  func_ptr = &stopLEDs; animateTransition();	//Transition
-			break;
+		break;
+		case UI_OFF:  func_ptr = &stopLEDs; animateTransition(LED_TIMEOUT);	//Transition
+		break;
 		case UI_OFF_WITHOUT_CONFIRMING: stopLEDs();	//Transition
-			break;
+		break;
 		default:
-			break;
+		break;
 		
 	}
 
@@ -217,11 +221,26 @@ void cycleLEDAnimation(state_change change){
 
 }
 
+void cycleLEDAnimation(){
+	if(ongoingAnimation == A_MANUALIRRIGATION){
+		animateManualIrrigation();
+		}else if(ongoingAnimation == A_SELECTINTERVAL){
+		animateSelectInterval();
+		}else if(ongoingAnimation == A_SELECTTHRESHOLD){
+		animateSelectThreshold();
+	}
+}
+
 
 //Blink green led two times and then switch to passed state
-void animateTransition(){
+void animateTransition(uint8_t confirm){
 
-	ongoingAnimation = A_TRANSITIONING;
+	if(confirm){
+		ongoingAnimation = A_TRANSITIONING_CONF;
+	}else{
+		ongoingAnimation = A_TRANSITIONING_TIMEOUT;
+	}
+	
 
 	//Set overflow interval to 250ms
 	resetTimerSettings();
@@ -245,23 +264,64 @@ void animateBatteryLevel(){
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
 }
 
+void animateBlinking(char color, uint16_t delay){
+	static uint16_t milliSecondCounter1 = 0;
+	
+	milliSecondCounter1 += MAINLOOP_DELAY;
+	if(milliSecondCounter1 >= delay){
+
+		switch (color)
+		{
+			case 'R': PORTA.OUTTGL = (1<<PIN_REDLED);
+			break;
+			case 'G': PORTB.OUTTGL = (1<<PIN_GREENLED);
+			break;
+			case 'B': PORTB.OUTTGL = (1<<BLUE_LED);
+			break;
+			case 'O': PORTA.OUTTGL = (1<<PIN_REDLED);PORTB.OUTTGL = (1<<PIN_GREENLED);
+			break;
+			default:
+			/* Your code here */
+			break;
+		}
+
+		milliSecondCounter1 = 0;
+	}
+	
+}
+
 void animateSelectThreshold(){
 
+	if(ongoingAnimation != A_SELECTTHRESHOLD){
+		resetTimerSettings();
+		ongoingAnimation = A_SELECTTHRESHOLD;
+	}
 	
-	ongoingAnimation = A_SELECTTHRESHOLD;
+	animateBlinking('G', 500);
 
-	resetTimerSettings();
-	PORTB.OUTSET = (1<<PIN_GREENLED);
-	PORTA.OUTSET = (1<<PIN_REDLED);
 }
 
 void animateSelectInterval(){
 
+	if(ongoingAnimation != A_SELECTINTERVAL){
+		resetTimerSettings();
+		ongoingAnimation = A_SELECTINTERVAL;
+	}
+	
+	animateBlinking('R', 500);
 
-	ongoingAnimation = A_SELECTINTERVAL;
 
-	resetTimerSettings();
-	PORTA.OUTSET = (1<<PIN_REDLED);
+}
+
+void animateManualIrrigation(){
+	
+	if(ongoingAnimation != A_MANUALIRRIGATION){
+		resetTimerSettings();
+		ongoingAnimation = A_MANUALIRRIGATION;
+	}
+	
+	animateBlinking('B', 1000);
+
 }
 
 void animateChangeSoilThreshold(){
@@ -280,15 +340,15 @@ void animateChangeInterval(){
 	resetTimerSettings();
 	switch(interval){
 		case 1: TCA0.SINGLE.PER = 24000;
-			break;
+		break;
 		case 2: TCA0.SINGLE.PER = 12000;
-			break;
+		break;
 		case 3: TCA0.SINGLE.PER = 6000;
-			break;
+		break;
 		case 4: TCA0.SINGLE.PER = 3000;
-			break;
+		break;
 		case 5: TCA0.SINGLE.PER = 1500;
-			break;
+		break;
 	}
 
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
