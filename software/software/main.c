@@ -77,10 +77,18 @@ ISR(PORTB_PORT_vect)
 				disablePITInterrupt();
 				
 				if(mState == SLEEP){
-					
+
 					mState = ACTIVE;
-					state_change changeOfState = changeUIState(SHORT);
-					changeLEDAnimation(changeOfState);
+
+					if(getValveError() == NO_ERROR){
+						state_change changeOfState = changeUIState(SHORT);
+						changeLEDAnimation(changeOfState);
+					}else{
+						uiState = ERRORSTATE;
+						changeLEDAnimation(SHOW_ERROR);
+					}
+
+					
 				}
 				
 			}
@@ -182,79 +190,124 @@ int main(void)
     while (1) 
     {
 		if (mState == ACTIVE || mState == PERIODICWAKEUP){
-			if(mState == ACTIVE){
-				
-				pressType button_press = NONE;
-				
-				if(buttonSensingOn){
-					button_press = senseMagneticSwitch();
-				}
-				
-				state_change changeOfState = changeUIState(button_press);
-				
-				//Do not count timeout when in manual irrigation mode
-				if(getUIState()!=MANUALIRRIGATION){
-					state_change timeOutStateChange = countUITimeOut();
-					if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
-				}
-				
-				if(changeOfState == FROM_SHOWBATTERY_TO_MANUALIRRIGATION){
-					manualIrrigation = 1;
-					openValve();
-				}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWBATTERY){
-					manualIrrigation = 0;
-					closeValve();
-				}
-				
-				changeLEDAnimation(changeOfState);
-				cycleLEDAnimation();
-				
-				if(button_press == VERYLONG){switchOFF(); continue;}
-			}
+			if(getValveError()==NO_ERROR){
+
 			
-			if(manualIrrigation == 0){
-				_delay_ms(MAINLOOP_DELAY/2);
-				PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
-				_delay_ms(MAINLOOP_DELAY/2);
-				SM = ADC_0_readSoilMoisture();
-				PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
+				if(mState == ACTIVE){
 				
-				if(SM >= getCurrentThresholds().thresholdClose){
-					if(getValveState() == OPEN){
-						closeValve();
-						motorStateChanged = 1;
+					pressType button_press = NONE;
+				
+					if(buttonSensingOn){
+						button_press = senseMagneticSwitch();
 					}
-					}else if (SM <= getCurrentThresholds().tresholdOpen){
-					if(getValveState() == CLOSED){
+				
+					state_change changeOfState = changeUIState(button_press);
+				
+					//Do not count timeout when in manual irrigation mode
+					if(getUIState()!=MANUALIRRIGATION){
+						state_change timeOutStateChange = countUITimeOut();
+						if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
+					}
+				
+					if(changeOfState == FROM_SHOWBATTERY_TO_MANUALIRRIGATION){
+						manualIrrigation = 1;
 						openValve();
-						motorStateChanged = 1;
+					}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWBATTERY){
+						manualIrrigation = 0;
+						closeValve();
 					}
+				
+					changeLEDAnimation(changeOfState);
+					cycleLEDAnimation();
+				
+					if(button_press == VERYLONG){switchOFF(); continue;}
 				}
-			}else{
-				_delay_ms(MAINLOOP_DELAY);
-			}
 			
-			
-			
-			if(mState == PERIODICWAKEUP){
-				if (motorStateChanged == 1) {changePITInterval();}
-				sleepCounter = 0;
-				motorStateChanged = 0;
-				mState = SLEEP;
-				enablePORTBInterrupt();
-				sleep_mode();
+				if(manualIrrigation == 0){
+					_delay_ms(MAINLOOP_DELAY/2);
+					PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
+					_delay_ms(MAINLOOP_DELAY/2);
+					SM = ADC_0_readSoilMoisture();
+					PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
 				
-			}else if(mState == ACTIVE){
-				
-				if(getLEDAnimation() == NO_ANIMATION){
-					changePITInterval();
+					if(SM >= getCurrentThresholds().thresholdClose){
+						if(getValveState() == OPEN){
+							closeValve();
+							motorStateChanged = 1;
+						}
+						}else if (SM <= getCurrentThresholds().tresholdOpen){
+						if(getValveState() == CLOSED){
+							openValve();
+							motorStateChanged = 1;
+						}
+					}
+				}else{
+					_delay_ms(MAINLOOP_DELAY);
+				}
+
+				if(getValveError() != NO_ERROR){
+					//PIT interval to 4 sec
+					changePIT(RTC_PRESCALER_DIV2048_gc, 1);
+					uiState = ERRORSTATE;
+					if(mState == ACTIVE) changeLEDAnimation(SHOW_ERROR);
+					continue;
+				}
+
+			
+				if(mState == PERIODICWAKEUP){
+					if (motorStateChanged == 1) {changePITInterval();}
 					sleepCounter = 0;
 					motorStateChanged = 0;
 					mState = SLEEP;
-					enablePITInterrupt();
+					enablePORTBInterrupt();
+					sleep_mode();
+				
+				}else if(mState == ACTIVE){
+				
+					if(getLEDAnimation() == NO_ANIMATION){
+						changePITInterval();
+						sleepCounter = 0;
+						motorStateChanged = 0;
+						mState = SLEEP;
+						enablePITInterrupt();
+						sleep_mode();
+					}
+				
+				}
+			}else{
+			//What happens when valve error occured
+				if (mState == ACTIVE){
+					//Show the errors
+					senseMagneticSwitch();
+
+					
+					state_change timeOutStateChange = countUITimeOut();
+					
+
+					_delay_ms(MAINLOOP_DELAY);
+
+					changeLEDAnimation(timeOutStateChange);
+					cycleLEDAnimation();
+
+					if(getLEDAnimation() == NO_ANIMATION){
+						sleepCounter = 0;
+						mState = SLEEP;
+						enablePITInterrupt();
+						sleep_mode();
+					}
+
+
+
+				}else if(mState == PERIODICWAKEUP){
+					PORTA.OUTSET = (1<<PIN_REDLED);
+					_delay_ms(MAINLOOP_DELAY);
+					PORTA.OUTCLR = (1<<PIN_REDLED);
+
+					sleepCounter = 0;
+					mState = SLEEP;
+					enablePORTBInterrupt();
 					sleep_mode();
 				}
-				
 			}
 		}else if(mState == SLEEP){
 			sleep_mode();
@@ -263,7 +316,6 @@ int main(void)
 			if(buttonSensingOn == 0){
 				
 				pressType button_press = senseMagneticSwitch();
-				//PORTB.OUTTGL = (1<<BLUE_LED);
 				if(button_press == VERYLONG){
 					
 					mState = ACTIVE;

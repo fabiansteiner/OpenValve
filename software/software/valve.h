@@ -28,8 +28,8 @@ typedef enum {NO_ERROR, LOW_VOLTAGE , HIGH_CURRENT, VALVE_TIMEOUT}  valveError;
 /*
 Errors Meanings
 	VOLTAGELOW:		When Voltage got too low (<3,9V) when the valve closed last time, But Valve is Closed and in Safe Position
-	HIGH_CURRENT:	When Current got too high when closing (the valve could potentially damage itself without this), But valve is PROBABLY closed and in safe position, Causes: Button is damaged or out of Range (Housing Deformation)
-	VALVE_TIMEOUT:	When the Motor was driving for more than 3 seconds and the valve is not closed AND did not get shut off because of high current, valve is PROBABLY open and in an unsafe position, Causes: Damaged Motor, Init Phase where user wants to bring motor shaft in good position
+	HIGH_CURRENT:	When Current got too high when closing (the valve could potentially damage itself without this), But valve is PROBABLY closed and in safe position, Causes: Button is damaged or out of Range (Housing Deformation), or threshold is set too low
+	VALVE_TIMEOUT:	When the Motor was driving for more than 3 seconds and the valve is not closed AND did not get shut off because of high current, valve is PROBABLY open and in an unsafe position, Causes: Damaged Motor or motor mechanics, Also occurs in the INIT Phase where user wants to bring motor shaft in suitable position
 */
 
 //Figure out state of valve, if not closed, close it
@@ -43,7 +43,7 @@ void changeMotorState();
 
 valveState getValveState();
 
-void setValveState(valveState);
+valveError getValveError();
 
 
 

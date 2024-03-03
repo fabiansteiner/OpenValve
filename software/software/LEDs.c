@@ -41,6 +41,7 @@ void animateSelectThreshold();	//Glow Orange
 void animateSelectInterval();	//Glow Red
 void animateChangeSoilThreshold();	//Blink as many times as currentThresholdLevel, then stop for a second
 void animateChangeInterval();			//Blink led red, the higher the interval level the faster it blinks
+void animateErrorStates();
 void stopLEDs();
 
 
@@ -257,6 +258,8 @@ void changeLEDAnimation(state_change change){
 		break;
 		case UI_SHUTDOWN: func_ptr = &stopLEDs; animateTransition(LED_SHUTDOWN);	//Transition
 		break;
+		case SHOW_ERROR: animateSelectInterval();
+		break;
 		default:
 		break;
 		
@@ -271,10 +274,12 @@ void changeLEDAnimation(state_change change){
 void cycleLEDAnimation(){
 	if(ongoingAnimation == A_MANUALIRRIGATION){
 		animateManualIrrigation();
-		}else if(ongoingAnimation == A_SELECTINTERVAL){
+	}else if(ongoingAnimation == A_SELECTINTERVAL){
 		animateSelectInterval();
-		}else if(ongoingAnimation == A_SELECTTHRESHOLD){
+	}else if(ongoingAnimation == A_SELECTTHRESHOLD){
 		animateSelectThreshold();
+	}else if(ongoingAnimation == A_SHOWERRORS){
+		animateErrorStates();
 	}
 }
 
@@ -361,6 +366,18 @@ void animateSelectInterval(){
 	if(ongoingAnimation != A_SELECTINTERVAL){
 		resetTimerSettings();
 		ongoingAnimation = A_SELECTINTERVAL;
+	}
+	
+	animateBlinking('R', 100);
+
+
+}
+
+void animateErrorStates(){
+
+	if(ongoingAnimation != A_SHOWERRORS){
+		resetTimerSettings();
+		ongoingAnimation = A_SHOWERRORS;
 	}
 	
 	animateBlinking('R', 100);

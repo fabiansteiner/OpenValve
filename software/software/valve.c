@@ -86,7 +86,7 @@ void openValve(){
 		
 		PORTB_OUTSET = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		error = NO_ERROR;
+		//error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
@@ -145,7 +145,7 @@ void closeValve(){
 	
 		PORTB_OUTCLR = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		error = NO_ERROR;
+		//error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	
 	}
@@ -167,10 +167,9 @@ valveState getValveState(){
 	return motState;
 }
 
-void setValveState(valveState vState){
-	motState = vState;
+valveError getValveError(){
+	return error;
 }
-
 
 
 ISR(PORTA_PORT_vect)

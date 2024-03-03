@@ -70,9 +70,7 @@ state_change changeUIState(pressType button_press){
 	state_change change = NO_CHANGE;
 
 	if(button_press != NONE && button_press != VERYLONG){
-		//User Pressed something, reset Timeout Variables
-		milliSecondCounter = 0;
-		secondCounter = 0;
+		
 		
 		
 			
@@ -133,6 +131,7 @@ state_change changeUIState(pressType button_press){
 				change = UI_OFF;
 			}
 			break;
+			default: break;
 		}
 		
 		
@@ -154,6 +153,10 @@ pressType senseMagneticSwitch(){
 	pressType press = NONE;
 
 	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))==0){
+		//User Pressed something, reset Timeout Variables
+		milliSecondCounter = 0;
+		secondCounter = 0;
+
 		buttonTimeCounter++;
 		buttonTimeCounterForSwitchOFF++;
 		
