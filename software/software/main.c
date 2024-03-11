@@ -6,6 +6,7 @@
  */ 
 
 #define F_CPU 3333333
+#define MULTIPLICATOR_TIME_LIMIT 7200	//2 Stunden
 
 #include "common.h"
 #include "ADC.h"
@@ -27,6 +28,9 @@ volatile uint8_t wakeUpCycles = 1;
 volatile uint8_t sleepCounter = 0;
 volatile uint8_t manualIrrigation = 0;
 volatile uint8_t buttonSensingOn = 0;
+
+
+
 
 
 #define PB0_LOW !(PORTB.IN & PIN0_bm)
@@ -57,6 +61,7 @@ ISR(RTC_PIT_vect)
 		if(sleepCounter >= wakeUpCycles){
 			disablePORTBInterrupt();
 			mState = PERIODICWAKEUP;
+			
 		}
 		
 	}
@@ -84,6 +89,7 @@ ISR(PORTB_PORT_vect)
 						state_change changeOfState = changeUIState(SHORT);
 						changeLEDAnimation(changeOfState);
 					}else{
+						//Direct access to UI state, because changeUIState only takes button presses an input and this input is not triggered from the user
 						uiState = ERRORSTATE;
 						changeLEDAnimation(SHOW_ERROR);
 					}
@@ -119,6 +125,11 @@ void initSleep(void)
 
 }
 
+volatile uint16_t irrigationTimeCounter = 0;
+volatile uint8_t currentSleepTime = 4;
+uint16_t miliSecCounter = 0;
+uint8_t executeMultiplicator = 0;
+
 void changePIT(uint8_t prescaler, uint8_t cycles){
 	while((RTC.PITSTATUS & (1<<0)) != 0);
 	RTC.PITCTRLA = prescaler | (1<<0);
@@ -128,31 +139,19 @@ void changePIT(uint8_t prescaler, uint8_t cycles){
 
 void changePITInterval(){
 	if(getValveState() == OPEN){
-		switch(getCurrentInterval()){
-			case SEC4:
-				changePIT(RTC_PRESCALER_DIV2048_gc, 1);
-				break;
-			case SEC16:
-				changePIT(RTC_PRESCALER_DIV8192_gc, 1);
-				break;
-			case MIN1:
-				changePIT(RTC_PRESCALER_DIV16384_gc, 2);
-				break;
-			case MIN5:
-				changePIT(RTC_PRESCALER_DIV16384_gc, 10);
-				break;
-			case MIN60: 
-				changePIT(RTC_PRESCALER_DIV16384_gc, 120);
-				break;
+		if(irrigationTimeCounter <= 180){ 
+			changePIT(RTC_PRESCALER_DIV2048_gc, 1); currentSleepTime = 4;	//4 seconds
+		}else if (irrigationTimeCounter <= 592){
+			changePIT(RTC_PRESCALER_DIV8192_gc, 1); currentSleepTime = 16;	//16 seconds
+		}else{
+			changePIT(RTC_PRESCALER_DIV16384_gc, 2); currentSleepTime = 60;	//1 minute
 		}
+
+
 	}else if(getValveState() == CLOSED){
-		switch(getCurrentInterval()){
-			case SEC4:
-				changePIT(RTC_PRESCALER_DIV2048_gc, 1);
-				break;
-			default:
-				changePIT(RTC_PRESCALER_DIV16384_gc, 120);
-		}
+		changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
+		//changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
+	
 	}
 	
 }
@@ -160,6 +159,7 @@ void changePITInterval(){
 void switchOFF(){
 	disablePITInterrupt();
 	closeValve();
+	manualIrrigation = 0;
 	while(getLEDAnimation() != NO_ANIMATION);
 	mState = OFF;
 	sleep_mode();
@@ -200,6 +200,7 @@ int main(void)
 					if(buttonSensingOn){
 						button_press = senseMagneticSwitch();
 					}
+					
 				
 					state_change changeOfState = changeUIState(button_press);
 				
@@ -215,15 +216,18 @@ int main(void)
 					}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWBATTERY){
 						manualIrrigation = 0;
 						closeValve();
+						irrigationTimeCounter=0;
+						miliSecCounter=0;
 					}
 				
 					changeLEDAnimation(changeOfState);
 					cycleLEDAnimation();
 				
-					if(button_press == VERYLONG){switchOFF(); continue;}
+					if(changeOfState == UI_SHUTDOWN){switchOFF(); continue;}
 				}
 			
-				if(manualIrrigation == 0){
+				//If manual irrigation off = normal operation
+				if(manualIrrigation == 0 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY/2);
 					PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
 					_delay_ms(MAINLOOP_DELAY/2);
@@ -232,19 +236,72 @@ int main(void)
 				
 					if(SM >= getCurrentThresholds().thresholdClose){
 						if(getValveState() == OPEN){
-							closeValve();
-							motorStateChanged = 1;
+							if(mState == ACTIVE || getCurrentMultiplicator() == 1){
+								closeValve();
+								motorStateChanged = 1;
+								executeMultiplicator = 0;
+							}else{
+								
+								uint16_t newIrrigationTimeCounter = irrigationTimeCounter * (0.5f * (getCurrentMultiplicator()-1));
+								
+								//Limit total irrigation time to 2 hours
+								if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){
+									closeValve();
+									irrigationTimeCounter = 0;
+								}else if ((irrigationTimeCounter + newIrrigationTimeCounter) > MULTIPLICATOR_TIME_LIMIT){
+									irrigationTimeCounter = MULTIPLICATOR_TIME_LIMIT-irrigationTimeCounter;	
+									executeMultiplicator = 1;
+								}else{
+									irrigationTimeCounter = newIrrigationTimeCounter;
+									executeMultiplicator = 1;
+								}
+									
+								
+								
+							}
+							
 						}
-						}else if (SM <= getCurrentThresholds().tresholdOpen){
+					}else if (SM <= getCurrentThresholds().tresholdOpen){
 						if(getValveState() == CLOSED){
 							openValve();
 							motorStateChanged = 1;
 						}
-					}
-				}else{
+				}
+				//If manual irrigation on = just wait, measuring is not necessary
+				}else if(manualIrrigation == 1 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY);
+					miliSecCounter += MAINLOOP_DELAY;
+					if(miliSecCounter >=1000){
+						irrigationTimeCounter++;
+						miliSecCounter=0;
+						
+						if(irrigationTimeCounter >= 900){	//15min timout
+							//Simulate button press
+							changeUIState(SHORT);
+							
+							manualIrrigation = 0;
+							closeValve();
+							irrigationTimeCounter=0;
+							miliSecCounter=0;
+							
+							changeLEDAnimation(FROM_MANUALIRRIGATION_TO_SHOWBATTERY);
+							cycleLEDAnimation();
+						}
+					}
+					
+					
+					
+				}else if (executeMultiplicator == 1){
+					// Close, when multiplicator executed or state changes to active
+					if(irrigationTimeCounter < 5 || mState == ACTIVE){
+						closeValve();
+						executeMultiplicator = 0;
+						irrigationTimeCounter = 0;
+					}
+					
 				}
 
+				//If error occured after driving the motor, change to error state and exit loop
 				if(getValveError() != NO_ERROR){
 					//PIT interval to 4 sec
 					changePIT(RTC_PRESCALER_DIV2048_gc, 1);
@@ -255,7 +312,20 @@ int main(void)
 
 			
 				if(mState == PERIODICWAKEUP){
-					if (motorStateChanged == 1) {changePITInterval();}
+					
+					changePITInterval();
+					if (getValveState() == OPEN && getCurrentMultiplicator() != 1 && executeMultiplicator == 0) {
+						//TODO: Not correct: time is already count when valve was not asleep yet, so time is off 4 seconds (not really, cause time is 
+						if (irrigationTimeCounter < MULTIPLICATOR_TIME_LIMIT+10)
+						irrigationTimeCounter += currentSleepTime;
+					}else if (executeMultiplicator == 1 && irrigationTimeCounter >= currentSleepTime){
+						irrigationTimeCounter -= currentSleepTime;
+					}
+					
+					
+						
+					
+					
 					sleepCounter = 0;
 					motorStateChanged = 0;
 					mState = SLEEP;
@@ -275,7 +345,7 @@ int main(void)
 				
 				}
 			}else{
-			//What happens when valve error occured
+			//valve error occured
 				if (mState == ACTIVE){
 					//Show the errors
 					senseMagneticSwitch();

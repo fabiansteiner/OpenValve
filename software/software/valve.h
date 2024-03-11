@@ -23,7 +23,7 @@
 #define MAX_CUR 1.0
 
 typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, OPENING = 20, CLOSING = 40}  valveState;
-typedef enum {NO_ERROR, LOW_VOLTAGE , HIGH_CURRENT, VALVE_TIMEOUT}  valveError;
+typedef enum {LOW_VOLTAGE=1 , HIGH_CURRENT=2, VALVE_TIMEOUT=3, NO_ERROR}  valveError;
 
 /*
 Errors Meanings

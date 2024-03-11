@@ -147,6 +147,7 @@ void closeValve(){
 		//IGNORE ERROR STATES FOR DEV
 		//error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
+		
 	
 	}
 	

@@ -38,10 +38,10 @@ void animateManualIrrigation();
 void animateTransition(uint8_t confirm);	//Blink green led two times
 void animateBatteryLevel();		//From red to green to red to battery state
 void animateSelectThreshold();	//Glow Orange
-void animateSelectInterval();	//Glow Red
+void animateSelectMultiplicator();	//Glow Red
 void animateChangeSoilThreshold();	//Blink as many times as currentThresholdLevel, then stop for a second
-void animateChangeInterval();			//Blink led red, the higher the interval level the faster it blinks
-void animateErrorStates();
+void animateChangeMultiplicator();			//Blink led red, the higher the interval level the faster it blinks
+void animateValveErrors();
 void stopLEDs();
 
 
@@ -172,14 +172,33 @@ ISR(TCA0_OVF_vect)
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			//PORTA.OUTTGL = (1<<PIN_REDLED);
 			animationCounter++;
-			}else{
+		}else{
 			animationCounter++;
 			if(animationCounter > soilLevel*2+8){
 				animationCounter = 0;
 			}
 		}
-	}else if (ongoingAnimation == A_CHANGEINTERVAL){
-		PORTA.OUTTGL = (1<<PIN_REDLED);
+	}else if(ongoingAnimation == A_CHANGEMULTIPLICATOR){
+		if (animationCounter < multiplicator*2){
+			PORTB.OUTTGL = (1<<PIN_GREENLED);
+			PORTA.OUTTGL = (1<<PIN_REDLED);
+			animationCounter++;
+			}else{
+			animationCounter++;
+			if(animationCounter > multiplicator*2+8){
+				animationCounter = 0;
+			}
+		}
+	}else if(ongoingAnimation == A_SHOWERRORS){
+		if (animationCounter < getValveError()*2){
+			PORTA.OUTTGL = (1<<PIN_REDLED);
+			animationCounter++;
+		}else{
+			animationCounter++;
+			if(animationCounter > getValveError()*2+8){
+				animationCounter = 0;
+			}
+		}
 	}
 
 
@@ -240,17 +259,17 @@ void changeLEDAnimation(state_change change){
 		break;
 		case FROM_MANUALIRRIGATION_TO_SHOWBATTERY: animateBatteryLevel();
 		break;
-		case FROM_SELECTTHRESHOLD_TO_SELECTINTERVAL: animateSelectInterval();
+		case FROM_SELECTTHRESHOLD_TO_SELECTMULTIPLICATOR: animateSelectMultiplicator();
 		break;
 		case FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD: func_ptr = &animateChangeSoilThreshold;		animateTransition(LED_CONFIRM); //Transition
 		break;
-		case FROM_SELECTINTERVAL_TO_SELECTTHRESHOLD: animateSelectThreshold();
+		case FROM_SELECTMULTIPLICATOR_TO_SELECTTHRESHOLD: animateSelectThreshold();
 		break;
-		case FROM_SELECTINTERVAL_TO_CHANGEINTERVAL: func_ptr = &animateChangeInterval;				animateTransition(LED_CONFIRM); //Transition
+		case FROM_SELECTMULTIPLICATOR_TO_CHANGEMULTIPLICATOR: func_ptr = &animateChangeMultiplicator;				animateTransition(LED_CONFIRM); //Transition
 		break;
 		case THRESHOLD_CHANGED: animateChangeSoilThreshold();
 		break;
-		case INTERVAL_CHANGED: animateChangeInterval();
+		case MULTIPLICATOR_CHANGED: animateChangeMultiplicator();
 		break;
 		case UI_OFF:  func_ptr = &stopLEDs; animateTransition(LED_CONFIRM);	//Transition
 		break;
@@ -258,7 +277,7 @@ void changeLEDAnimation(state_change change){
 		break;
 		case UI_SHUTDOWN: func_ptr = &stopLEDs; animateTransition(LED_SHUTDOWN);	//Transition
 		break;
-		case SHOW_ERROR: animateSelectInterval();
+		case SHOW_ERROR: animateValveErrors();
 		break;
 		default:
 		break;
@@ -274,12 +293,10 @@ void changeLEDAnimation(state_change change){
 void cycleLEDAnimation(){
 	if(ongoingAnimation == A_MANUALIRRIGATION){
 		animateManualIrrigation();
-	}else if(ongoingAnimation == A_SELECTINTERVAL){
-		animateSelectInterval();
+	}else if(ongoingAnimation == A_SELECTMULTIPLICATOR){
+		animateSelectMultiplicator();
 	}else if(ongoingAnimation == A_SELECTTHRESHOLD){
 		animateSelectThreshold();
-	}else if(ongoingAnimation == A_SHOWERRORS){
-		animateErrorStates();
 	}
 }
 
@@ -361,29 +378,19 @@ void animateSelectThreshold(){
 
 }
 
-void animateSelectInterval(){
+void animateSelectMultiplicator(){
 
-	if(ongoingAnimation != A_SELECTINTERVAL){
+	if(ongoingAnimation != A_SELECTMULTIPLICATOR){
 		resetTimerSettings();
-		ongoingAnimation = A_SELECTINTERVAL;
+		ongoingAnimation = A_SELECTMULTIPLICATOR;
 	}
 	
-	animateBlinking('R', 100);
+	animateBlinking('O', 100);
 
 
 }
 
-void animateErrorStates(){
 
-	if(ongoingAnimation != A_SHOWERRORS){
-		resetTimerSettings();
-		ongoingAnimation = A_SHOWERRORS;
-	}
-	
-	animateBlinking('R', 100);
-
-
-}
 
 void animateManualIrrigation(){
 	
@@ -405,12 +412,27 @@ void animateChangeSoilThreshold(){
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
 
-void animateChangeInterval(){
-	ongoingAnimation = A_CHANGEINTERVAL;
+void animateValveErrors(){
+	ongoingAnimation = A_SHOWERRORS;
 	
-	//Blink led red, the higher the interval level the faster it blinks%
+	//Blink as many times as currentThresholdLevel, then stop for a second
 	resetTimerSettings();
-	switch(interval){
+	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+}
+
+void animateChangeMultiplicator(){
+	ongoingAnimation = A_CHANGEMULTIPLICATOR;
+	
+	//Blink as many times as currentThresholdLevel, then stop for a second
+	resetTimerSettings();
+	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+	
+	//Blink led red, the higher the multiplicator the faster it blinks%
+	/*
+	resetTimerSettings();
+	switch(multiplicator){
 		case 1: TCA0.SINGLE.PER = 24000;
 		break;
 		case 2: TCA0.SINGLE.PER = 12000;
@@ -424,6 +446,7 @@ void animateChangeInterval(){
 	}
 
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+	*/
 	
 }
 

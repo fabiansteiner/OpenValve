@@ -16,7 +16,7 @@ UIstate uiState = SHOWNOTHING;
 
 
 uint8_t soilLevel = 4;
-uint8_t interval = 5;
+uint8_t multiplicator = 1;
 
 
 thresholds currentThresholds;
@@ -43,9 +43,9 @@ void increaseThreshold(){
 	
 }
 
-void increaseInterval(){
-	interval++;
-	if(interval > 5) interval = 1;
+void increaseMultiplicator(){
+	multiplicator++;
+	if(multiplicator > 5) multiplicator = 1;
 }
 
 
@@ -54,9 +54,9 @@ thresholds getCurrentThresholds(){
 	return currentThresholds;
 }
 
-uint8_t getCurrentInterval(){
+uint8_t getCurrentMultiplicator(){
 	
-	return interval;
+	return multiplicator;
 }
 
 UIstate getUIState(){
@@ -97,20 +97,20 @@ state_change changeUIState(pressType button_press){
 			break;
 			case SELECTTHRESHOLD:
 			if(button_press == SHORT){
-				uiState = SELECTINTERVAL;
-				change = FROM_SELECTTHRESHOLD_TO_SELECTINTERVAL;
+				uiState = SELECTMULTIPLICATOR;
+				change = FROM_SELECTTHRESHOLD_TO_SELECTMULTIPLICATOR;
 				}else if (button_press == LONG){
 				uiState = CHANGETHRESHOLD;
 				change = FROM_SELECTTHRESHOLD_TO_CHANGETHRESHOLD;
 			}
 			break;
-			case SELECTINTERVAL:
+			case SELECTMULTIPLICATOR:
 			if(button_press == SHORT){
 				uiState = SELECTTHRESHOLD;
-				change = FROM_SELECTINTERVAL_TO_SELECTTHRESHOLD;
+				change = FROM_SELECTMULTIPLICATOR_TO_SELECTTHRESHOLD;
 				}else if (button_press == LONG){
-				uiState = CHANGEINTERVAL;
-				change = FROM_SELECTINTERVAL_TO_CHANGEINTERVAL;
+				uiState = CHANGEMULTIPLICATOR;
+				change = FROM_SELECTMULTIPLICATOR_TO_CHANGEMULTIPLICATOR;
 			}
 			break;
 			case CHANGETHRESHOLD:
@@ -122,10 +122,10 @@ state_change changeUIState(pressType button_press){
 				change = UI_OFF;
 			}
 			break;
-			case CHANGEINTERVAL:
+			case CHANGEMULTIPLICATOR:
 			if(button_press == SHORT){
-				increaseInterval();
-				change = INTERVAL_CHANGED;
+				increaseMultiplicator();
+				change = MULTIPLICATOR_CHANGED;
 				}else if (button_press == LONG){
 				uiState = SHOWNOTHING;
 				change = UI_OFF;
