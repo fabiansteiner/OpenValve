@@ -67,7 +67,7 @@ void openValve(){
 			
 			calc_watt = calc_volt * calc_curr;
 
-			if(calc_watt >= 2.2 ){	//(calc_volt >= 6.5 && calc_watt >= 2.0) || (calc_volt < 6.5 && calc_watt >= 2.5)
+			if(calc_watt >= 3.8 ){	//(calc_volt >= 6.5 && calc_watt >= 2.0) || (calc_volt < 6.5 && calc_watt >= 2.5)
 				PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 				motState = OPEN;
 			}
@@ -86,7 +86,7 @@ void openValve(){
 		
 		PORTB_OUTSET = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		//error = NO_ERROR;
+		error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
@@ -145,7 +145,7 @@ void closeValve(){
 	
 		PORTB_OUTCLR = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		//error = NO_ERROR;
+		error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 		
 	

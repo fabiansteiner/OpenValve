@@ -20,7 +20,7 @@ void initADC(){
 
 	ADC0.CTRLC = 0 << ADC_SAMPCAP_bp; /* Sample Capacitance Selection: disabled */
 	
-	ADC0.CTRLB = ADC_SAMPNUM_ACC8_gc;	//Accumulate 8 Samples
+	ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;	//Accumulate 8 Samples
 	
 	ADC0.CTRLA = ADC_RESSEL_10BIT_gc  /* 10-bit mode */
 	| 0 << ADC_RUNSTBY_bp; /* Run standby mode: disabled */
@@ -32,8 +32,8 @@ void initADC(){
 
 uint16_t read_adc_sample_accumulator()
 {
-	//return ADC0.RES >> 6;	//Read ADC Result and devide by 64
-	return ADC0.RES >> 3;	//Read ADC Result and devide by 8
+	return ADC0.RES >> 6;	//Read ADC Result and devide by 64
+	//return ADC0.RES >> 3;	//Read ADC Result and devide by 8
 	//return ADC0.RES >> 0;	//Read ADC Result and devide by 1
 }
 
@@ -43,7 +43,7 @@ uint16_t ADC_0_readBatteryVoltage(){
 	uint16_t adc_result_battery = 0;
 	
 	
-	ADC0.CTRLC = ADC_PRESC_DIV16_gc								//CLK_PER divided by 16 
+	ADC0.CTRLC = ADC_PRESC_DIV2_gc								//CLK_PER divided by 16 
 	| ADC_REFSEL_VDDREF_gc;										//VDD as reference 
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
 	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
@@ -65,7 +65,7 @@ uint16_t ADC_0_readCurrent(){
 	uint16_t adc_result_current = 0;
 	
 	
-	ADC0.CTRLC = ADC_PRESC_DIV16_gc								//CLK_PER divided by 16
+	ADC0.CTRLC = ADC_PRESC_DIV2_gc								//CLK_PER divided by 16
 	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
 	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
@@ -86,7 +86,7 @@ uint16_t ADC_0_readSoilMoisture(){
 	
 	uint16_t adc_result_soil = 0;
 
-	ADC0.CTRLC = ADC_PRESC_DIV16_gc								/* CLK_PER divided by 16 */
+	ADC0.CTRLC = ADC_PRESC_DIV2_gc								/* CLK_PER divided by 16 */
 	| ADC_REFSEL_INTREF_gc;										/* VDD as reference */
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
 	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
