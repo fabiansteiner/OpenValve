@@ -14,6 +14,7 @@
 #include "valve.h"
 
 
+
 //volatile uint8_t stateADC = FREE;
 
 void initADC(){
@@ -30,55 +31,28 @@ void initADC(){
 	
 }
 
-uint16_t read_adc_sample_accumulator()
-{
-	return ADC0.RES >> 6;	//Read ADC Result and devide by 64
+uint16_t read_adc_sample_accumulator(uint8_t shiftRight){
+	return ADC0.RES >> shiftRight;
+
+	//return ADC0.RES >> 6;	//Read ADC Result and devide by 64
 	//return ADC0.RES >> 3;	//Read ADC Result and devide by 8
 	//return ADC0.RES >> 0;	//Read ADC Result and devide by 1
 }
 
 
 uint16_t ADC_0_readBatteryVoltage(){
-	
-	uint16_t adc_result_battery = 0;
-	
-	
-	ADC0.CTRLC = ADC_PRESC_DIV2_gc								//CLK_PER divided by 16 
-	| ADC_REFSEL_VDDREF_gc;										//VDD as reference 
-	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
-	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
-	ADC0.MUXPOS  = PIN_BATTERYSENSING;							//Select channel
-	//ADC0.INTCTRL &= ~ADC_RESRDY_bm;							//Disable Interrupt Vector
-		
-	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
-	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
-	adc_result_battery = read_adc_sample_accumulator();			//Read Result
-	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
-	
-	
-	return adc_result_battery;
+
+	//ADC0.CTRLC = 0;
+	ADC0.SAMPCTRL = 31;
+	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC1_gc, PIN_BATTERYSENSING);
 	
 }
 
 uint16_t ADC_0_readCurrent(){
-	
-	uint16_t adc_result_current = 0;
-	
-	
-	ADC0.CTRLC = ADC_PRESC_DIV2_gc								//CLK_PER divided by 16
-	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
-	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
-	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
-	ADC0.MUXPOS  = PIN_CURRENTSENS_CHANNEL;							//Select channel
-	//ADC0.INTCTRL &= ~ADC_RESRDY_bm;								//Disable Interrupt Vector
-	
-	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
-	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
-	adc_result_current = read_adc_sample_accumulator();			//Read Result
-	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
-	
-	
-	return adc_result_current;
+
+	//ADC0.CTRLC |= ADC_ASDV_ASVON_gc;
+	ADC0.SAMPCTRL = 0;
+	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC8_gc, PIN_CURRENTSENS_CHANNEL);
 	
 }
 
@@ -86,8 +60,9 @@ uint16_t ADC_0_readSoilMoisture(){
 	
 	uint16_t adc_result_soil = 0;
 
-	ADC0.CTRLC = ADC_PRESC_DIV2_gc								/* CLK_PER divided by 16 */
+	ADC0.CTRLC = ADC_PRESC_DIV4_gc								/* CLK_PER divided by 16 */
 	| ADC_REFSEL_INTREF_gc;										/* VDD as reference */
+	ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
 	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
 	ADC0.MUXPOS  = PIN_SOILSENSOR;								//Select channel
@@ -97,12 +72,38 @@ uint16_t ADC_0_readSoilMoisture(){
 		
 	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
 	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
-	adc_result_soil = read_adc_sample_accumulator();									//Read Result
+	adc_result_soil = read_adc_sample_accumulator(ADC_SAMPNUM_ACC64_gc);									//Read Result
 	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
 		
 	
 	
 	return adc_result_soil;
+	
+}
+
+/*
+* prescaler: 
+*
+*/
+uint16_t getADCValue(uint8_t prescaler, uint8_t accumulation, uint8_t ADC_pin){
+	uint16_t adc_result = 0;
+	
+	
+	ADC0.CTRLC = prescaler								//CLK_PER divided by 16
+	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
+	ADC0.CTRLB = accumulation;
+	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
+	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
+	ADC0.MUXPOS  = ADC_pin;										//Select channel
+	//ADC0.INTCTRL &= ~ADC_RESRDY_bm;								//Disable Interrupt Vector
+	
+	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
+	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
+	adc_result = read_adc_sample_accumulator(accumulation);			//Read Result
+	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
+	
+	
+	return adc_result;
 	
 }
 
