@@ -122,7 +122,7 @@ void openValve(){
 			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > 0.35){
+			if(calc_curr > 0.40){
 				stopMotor();
 				motState = OPEN;
 				break;
@@ -244,7 +244,7 @@ void closeValve(){
 		}
 
 		
-		if(calc_volt <= 4.3){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
+		if(calc_volt <= 4.1){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
 			//PORTB_OUTSET = (1<<PIN_GREENLED);
 			//PORTB_OUTSET = (1<<BLUE_LED);
 			motState = CLOSED;

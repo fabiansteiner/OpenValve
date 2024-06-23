@@ -20,10 +20,10 @@
 #define PIN_MOTORSTOP 5		//PORTA
 
 #define MAX_VOL 9.9
-#define MAX_CUR 2.5			//Bei 0.2 Ohm Shunt
+#define MAX_CUR 1.0			//Bei 0.2 Ohm Shunt
 
-#define OPEN_TIMEOUT 1400
-#define CLOSE_TIMEOUT 1400
+#define OPEN_TIMEOUT 6000
+#define CLOSE_TIMEOUT 6000
 
 typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, OPENING = 20, CLOSING = 40}  valveState;
 typedef enum {LOW_VOLTAGE=1 , HIGH_CURRENT=2, VALVE_TIMEOUT=3, NO_ERROR}  valveError;
