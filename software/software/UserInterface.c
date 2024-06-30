@@ -160,13 +160,13 @@ pressType senseMagneticSwitch(){
 		buttonTimeCounter++;
 		buttonTimeCounterForSwitchOFF++;
 		
-		if(buttonTimeCounter>=150 && !alreadyPressed){
+		if(buttonTimeCounter>=75 && !alreadyPressed){
 			press = LONG;
 			buttonTimeCounter = 0;
 			alreadyPressed = 1;
 		}
 		
-		if(buttonTimeCounterForSwitchOFF>=600){
+		if(buttonTimeCounterForSwitchOFF>=300){
 			press = VERYLONG;
 			buttonTimeCounterForSwitchOFF = 0;
 			

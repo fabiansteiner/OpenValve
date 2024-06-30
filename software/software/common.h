@@ -9,8 +9,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define VERSION_MAJOR 3
-#define VERSION_MINOR 7
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 1
 
 //include all modules
 #define F_CPU 3333333

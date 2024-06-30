@@ -24,7 +24,7 @@
 
 //For Battery Level Map Function
 #define INPUT_START 620    // The lowest number of the range input.
-#define INPUT_END 930    // The largest number of the range input.
+#define INPUT_END 1023    // The largest number of the range input.
 #define OUTPUT_START 2 // The lowest number of the range output.
 #define OUTPUT_END 48  // The largest number of the range output.
 

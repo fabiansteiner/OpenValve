@@ -149,8 +149,8 @@ void changePITInterval(){
 
 
 	}else if(getValveState() == CLOSED){
-		changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
-		//changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
+		//changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
+		changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
 	
 	}
 	
@@ -383,7 +383,7 @@ int main(void)
 			sleep_mode();
 		}else if(mState == OFF){
 			
-			if(buttonSensingOn == 0){
+			if(buttonSensingOn == 0){	//As long as the is pressed
 				
 				pressType button_press = senseMagneticSwitch();
 				if(button_press == VERYLONG){
@@ -394,6 +394,7 @@ int main(void)
 				}
 				_delay_ms(MAINLOOP_DELAY);
 			}else{
+				senseMagneticSwitch();	//Call one more time to reset the time counting variables
 				sleep_mode();
 			}
 		}

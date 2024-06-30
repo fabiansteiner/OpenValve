@@ -53,7 +53,7 @@ void cycleBatteryLevelAnimation(){
 		PORTA.OUTCLR = (1<<PIN_REDLED);
 		TCA0.SINGLE.PERBUF = 3300-greenBrightness;
 		cycle = 1;
-		}else{
+	}else{
 		PORTB.OUTCLR = (1<<PIN_GREENLED);
 		PORTA.OUTSET = (1<<PIN_REDLED);
 		TCA0.SINGLE.PERBUF = greenBrightness;
@@ -61,8 +61,8 @@ void cycleBatteryLevelAnimation(){
 	}
 	
 	cycleCounter++;
-	//1ms passed
-	if (cycleCounter >= 2) {
+	
+	if (cycleCounter >= 2) {	//means 1ms passed
 		cycleCounter = 0;
 		
 		if (countingUp != 3)
@@ -74,28 +74,29 @@ void cycleBatteryLevelAnimation(){
 				if (countingUp==1){
 					if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
 						greenBrightness = greenBrightness + HALFSTEP;
-						}else{
+					}else{
 						greenBrightness = greenBrightness + ONESTEP;
 					}
 					
 					if(greenBrightness >= MAX_LEVEL) countingUp = 0;
-					}else if (countingUp == 0){
+
+				}else if (countingUp == 0){
 					if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
 						greenBrightness = greenBrightness - HALFSTEP;
-						}else{
+					}else{
 						greenBrightness = greenBrightness - ONESTEP;
 					}
 
 					if(greenBrightness <= MIN_LEVEL) countingUp = 2;
-					}else if (countingUp == 2){
+
+				}else if (countingUp == 2){
 					if (greenBrightness <= batteryLevel*66) {
 						if(greenBrightness >= ONESTEP*10 || greenBrightness <= ONESTEP*40){
 							greenBrightness = greenBrightness + HALFSTEP;
-							}else{
+						}else{
 							greenBrightness = greenBrightness + ONESTEP;
 						}
-					}
-					else {countingUp = 3;}
+					}else {countingUp = 3;}
 				}
 			}
 		}
@@ -130,8 +131,8 @@ ISR(TCA0_OVF_vect)
 		if (animationCounter < 2){
 				//Wait a little bit
 				animationCounter++;
-			}else if (animationCounter >=2 && animationCounter<12){
-				//Blink 5 times red 
+			}else if (animationCounter >=2 && animationCounter<8){
+				//Blink 3 times red 
 				PORTA.OUTTGL = (1<<PIN_REDLED);
 			
 				animationCounter++;
@@ -244,20 +245,77 @@ void initLEDs(){
 	TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);		//Count steps, not events
 }
 
+void animateVersionNumber(){
+/*
+if (animationCounter < 2){
+	PORTA.OUTTGL = (1<<PIN_REDLED);
+	PORTB.OUTTGL = (1<<PIN_GREENLED);
+	PORTB.OUTTGL = (1<<BLUE_LED);
+	animationCounter++;
+	}else if (animationCounter >=2 && animationCounter<6){
+	//Wait a little bit
+	animationCounter++;
+	}else if (animationCounter >=6 && animationCounter<VERSION_ANIMATION_COUNT1){
+	//Toggle RED led to indicate MAJOR version
+	PORTA.OUTTGL = (1<<PIN_REDLED);
+	animationCounter++;
+	}else if (animationCounter >=VERSION_ANIMATION_COUNT1 && animationCounter<VERSION_ANIMATION_COUNT2){
+	//Toggle green led to indicate Minor version
+	PORTB.OUTTGL = (1<<PIN_GREENLED);
+	animationCounter++;
+	}else if (animationCounter >=VERSION_ANIMATION_COUNT2 && animationCounter<VERSION_ANIMATION_COUNT3){
+	//Wait a bit
+	animationCounter++;
+	}else{
+	//Turn off counter
+	TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+	(*func_ptr)(); //Call appropriate function that was assigned when changing the state
+}
+*/
+
+	ongoingAnimation = A_TRANSITIONING_STARTUP;
+
+	PORTA.OUTTGL = (1<<PIN_REDLED);
+	PORTB.OUTTGL = (1<<PIN_GREENLED);
+	PORTB.OUTTGL = (1<<BLUE_LED);
+
+	_delay_ms(300);
+
+	PORTA.OUTTGL = (1<<PIN_REDLED);
+	PORTB.OUTTGL = (1<<PIN_GREENLED);
+	PORTB.OUTTGL = (1<<BLUE_LED);
+
+	_delay_ms(1000);
+
+	for(uint8_t i = 0; i < VERSION_MAJOR * 2; i++){
+		PORTA.OUTTGL = (1<<PIN_REDLED);
+		_delay_ms(250);
+	}
+
+
+	for(uint8_t i = 0; i < VERSION_MINOR * 2; i++){
+		PORTB.OUTTGL = (1<<PIN_GREENLED);
+		_delay_ms(250);
+	}
+	_delay_ms(750);
+
+	animateBatteryLevel();
+}
+
 
 void changeLEDAnimation(state_change change){
 	
 	
 	switch(change){
-		case UI_STARTUP: func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
+		case UI_STARTUP: /*animateVersionNumber();*/ batteryLevel = getBatteryLevel(); func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
 		break;
-		case FROM_SHOWNOTHING_TO_SHOWBATTERY: animateBatteryLevel();
+		case FROM_SHOWNOTHING_TO_SHOWBATTERY: batteryLevel = getBatteryLevel(); animateBatteryLevel();
 		break;
 		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition(LED_CONFIRM);	//Transition
 		break;
 		case FROM_SHOWBATTERY_TO_MANUALIRRIGATION: animateManualIrrigation();
 		break;
-		case FROM_MANUALIRRIGATION_TO_SHOWBATTERY: animateBatteryLevel();
+		case FROM_MANUALIRRIGATION_TO_SHOWBATTERY: batteryLevel = getBatteryLevel(); animateBatteryLevel();
 		break;
 		case FROM_SELECTTHRESHOLD_TO_SELECTMULTIPLICATOR: animateSelectMultiplicator();
 		break;
@@ -320,7 +378,6 @@ void animateTransition(uint8_t confirm){
 		ongoingAnimation = A_TRANSITIONING_STARTUP;
 		TCA0.SINGLE.PER = 4000;
 	}
-	
 
 	
 
@@ -331,7 +388,7 @@ void animateTransition(uint8_t confirm){
 void animateBatteryLevel(){
 
 	
-	batteryLevel = getBatteryLevel();
+	
 
 	ongoingAnimation = A_BATTERY;
 
@@ -374,7 +431,8 @@ void animateSelectThreshold(){
 		ongoingAnimation = A_SELECTTHRESHOLD;
 	}
 	
-	animateBlinking('G', 100);
+	//animateBlinking('G', 100);
+	PORTB.OUTSET = (1<<PIN_GREENLED);
 
 }
 
@@ -385,7 +443,9 @@ void animateSelectMultiplicator(){
 		ongoingAnimation = A_SELECTMULTIPLICATOR;
 	}
 	
-	animateBlinking('O', 100);
+	//animateBlinking('O', 100);
+	PORTB.OUTSET = (1<<PIN_GREENLED);
+	PORTA.OUTSET = (1<<PIN_REDLED);
 
 
 }

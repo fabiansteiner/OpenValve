@@ -52,7 +52,7 @@ uint16_t ADC_0_readCurrent(){
 
 	//ADC0.CTRLC |= ADC_ASDV_ASVON_gc;
 	ADC0.SAMPCTRL = 0;
-	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC8_gc, PIN_CURRENTSENS_CHANNEL);
+	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC32_gc, PIN_CURRENTSENS_CHANNEL);
 	
 }
 
@@ -111,12 +111,10 @@ uint8_t getBatteryLevel(){
 	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
 	
 	//Convert adc value to battery level between 2 and 48
-	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9V, ADC will read 3V
-	//Assumption: Battery is empty at 6V and full at 9V, which is an ADC Value between 620 and 930
+	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9.9V, ADC will read 3.3V
+	//Assumption: Battery is empty at 6V and full at 9,9V, which is an ADC Value between 620 and 930
 	//Map ADC Values to battery level
-	if(adcVoltage > 930){
-		return OUTPUT_END;
-	}else if(adcVoltage < 620){
+	if(adcVoltage < 620){
 		return OUTPUT_START;
 	}else{
 		return OUTPUT_START + ((adcVoltage - INPUT_START) * (OUTPUT_END - OUTPUT_START)) / (INPUT_END - INPUT_START);
