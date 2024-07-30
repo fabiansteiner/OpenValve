@@ -52,12 +52,15 @@ uint16_t ADC_0_readCurrent(){
 
 	//ADC0.CTRLC |= ADC_ASDV_ASVON_gc;
 	ADC0.SAMPCTRL = 0;
-	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC32_gc, PIN_CURRENTSENS_CHANNEL);
+	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC16_gc, PIN_CURRENTSENS_CHANNEL);
 	
 }
 
 uint16_t ADC_0_readSoilMoisture(){
 	
+	//Reset Sampling time
+	ADC0.SAMPCTRL = 0;
+
 	uint16_t adc_result_soil = 0;
 
 	ADC0.CTRLC = ADC_PRESC_DIV4_gc								/* CLK_PER divided by 16 */

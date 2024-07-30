@@ -122,7 +122,7 @@ void openValve(){
 			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > 0.4){
+			if(calc_curr > 0.45){
 				stopMotor();
 				motState = OPEN;
 				break;
@@ -223,7 +223,7 @@ void closeValve(){
 			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > 0.79){
+			if(calc_curr > 0.75){
 					
 				stopMotor();
 				motState = CLOSED;
