@@ -14,6 +14,7 @@
 
 #include <avr/io.h>
 
+
 #define PIN_CURRENTSENSING 3		//PORTA
 #define PIN_SOILSENSOR 1		//PORTA
 #define PIN_SOILSENSORON 2		//PORTA

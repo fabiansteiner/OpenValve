@@ -29,6 +29,10 @@ volatile uint8_t sleepCounter = 0;
 volatile uint8_t manualIrrigation = 0;
 volatile uint8_t buttonSensingOn = 0;
 
+volatile uint16_t irrigationTimeCounter = 0;
+volatile uint8_t currentSleepTime = 4;
+uint16_t miliSecCounter = 0;
+uint8_t executeMultiplicator = 0;
 
 
 
@@ -84,6 +88,7 @@ ISR(PORTB_PORT_vect)
 				if(mState == SLEEP){
 
 					mState = ACTIVE;
+					irrigationTimeCounter = 0;
 
 					if(getValveError() == NO_ERROR){
 						state_change changeOfState = changeUIState(SHORT);
@@ -125,10 +130,6 @@ void initSleep(void)
 
 }
 
-volatile uint16_t irrigationTimeCounter = 0;
-volatile uint8_t currentSleepTime = 4;
-uint16_t miliSecCounter = 0;
-uint8_t executeMultiplicator = 0;
 
 void changePIT(uint8_t prescaler, uint8_t cycles){
 	while((RTC.PITSTATUS & (1<<0)) != 0);
@@ -139,7 +140,7 @@ void changePIT(uint8_t prescaler, uint8_t cycles){
 
 void changePITInterval(){
 	if(getValveState() == OPEN){
-		if(irrigationTimeCounter <= 180){ 
+		if(irrigationTimeCounter <= 180){ //180
 			changePIT(RTC_PRESCALER_DIV2048_gc, 1); currentSleepTime = 4;	//4 seconds
 		}else if (irrigationTimeCounter <= 592){
 			changePIT(RTC_PRESCALER_DIV8192_gc, 1); currentSleepTime = 16;	//16 seconds
@@ -159,6 +160,7 @@ void changePITInterval(){
 void switchOFF(){
 	disablePITInterrupt();
 	closeValve();
+	PORTB_OUTCLR = (1<<BLUE_LED);
 	manualIrrigation = 0;
 	while(getLEDAnimation() != NO_ANIMATION);
 	mState = OFF;
@@ -190,6 +192,14 @@ int main(void)
     while (1) 
     {
 		if (mState == ACTIVE || mState == PERIODICWAKEUP){
+			
+			//When valve open, set blue led
+			if(manualIrrigation == 0){
+				if(getValveState() == OPEN) PORTB_OUTSET = (1<<BLUE_LED);
+				else PORTB_OUTCLR = (1<<BLUE_LED);
+			}
+			
+			
 			if(getValveError()==NO_ERROR){
 
 			
@@ -225,6 +235,7 @@ int main(void)
 				
 					if(changeOfState == UI_SHUTDOWN){switchOFF(); continue;}
 				}
+
 			
 				//If manual irrigation off = normal operation
 				if(manualIrrigation == 0 && executeMultiplicator == 0){
@@ -239,6 +250,7 @@ int main(void)
 							if(mState == ACTIVE || getCurrentMultiplicator() == 1){
 								closeValve();
 								motorStateChanged = 1;
+								irrigationTimeCounter = 0;
 								executeMultiplicator = 0;
 							}else{
 								
@@ -266,7 +278,7 @@ int main(void)
 							openValve();
 							motorStateChanged = 1;
 						}
-				}
+					}
 				//If manual irrigation on = just wait, measuring is not necessary
 				}else if(manualIrrigation == 1 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY);
@@ -314,8 +326,7 @@ int main(void)
 				if(mState == PERIODICWAKEUP){
 					
 					changePITInterval();
-					if (getValveState() == OPEN && getCurrentMultiplicator() != 1 && executeMultiplicator == 0) {
-						//TODO: Not correct: time is already count when valve was not asleep yet, so time is off 4 seconds (not really, cause time is 
+					if (getValveState() == OPEN && executeMultiplicator == 0) {
 						if (irrigationTimeCounter < MULTIPLICATOR_TIME_LIMIT+10)
 						irrigationTimeCounter += currentSleepTime;
 					}else if (executeMultiplicator == 1 && irrigationTimeCounter >= currentSleepTime){
@@ -329,6 +340,7 @@ int main(void)
 					sleepCounter = 0;
 					motorStateChanged = 0;
 					mState = SLEEP;
+					PORTB_OUTCLR = (1<<BLUE_LED);
 					enablePORTBInterrupt();
 					sleep_mode();
 				
@@ -339,6 +351,7 @@ int main(void)
 						sleepCounter = 0;
 						motorStateChanged = 0;
 						mState = SLEEP;
+						PORTB_OUTCLR = (1<<BLUE_LED);
 						enablePITInterrupt();
 						sleep_mode();
 					}
@@ -362,6 +375,7 @@ int main(void)
 					if(getLEDAnimation() == NO_ANIMATION){
 						sleepCounter = 0;
 						mState = SLEEP;
+						PORTB_OUTCLR = (1<<BLUE_LED);
 						enablePITInterrupt();
 						sleep_mode();
 					}
@@ -375,6 +389,7 @@ int main(void)
 
 					sleepCounter = 0;
 					mState = SLEEP;
+					PORTB_OUTCLR = (1<<BLUE_LED);
 					enablePORTBInterrupt();
 					sleep_mode();
 				}

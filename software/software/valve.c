@@ -25,7 +25,7 @@ volatile valveError error = NO_ERROR;
 
 uint16_t voltageADC;
 uint16_t currentADC;
-float calc_volt = 5.0;
+volatile float calc_volt = 5.0;
 float calc_curr;
 float calc_watt;
 float short_voltage;
@@ -49,7 +49,7 @@ void initializeValve(){
 	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
 		motState = CLOSED;
 	}else{
-		PORTB_OUTSET = (1<<BLUE_LED);
+		//PORTB_OUTSET = (1<<BLUE_LED);
 	}
 
 	
@@ -122,7 +122,7 @@ void openValve(){
 			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > 0.45){
+			if(calc_curr > OPEN_CURRENT){
 				stopMotor();
 				motState = OPEN;
 				break;
@@ -141,7 +141,7 @@ void openValve(){
 			//PORTA_OUTSET = (1<<PIN_REDLED);
 		}
 		
-		PORTB_OUTSET = (1<<BLUE_LED);
+		//PORTB_OUTSET = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
 		//error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
@@ -223,7 +223,7 @@ void closeValve(){
 			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > 0.75){
+			if(calc_curr > CLOSE_CURRENT){
 					
 				stopMotor();
 				motState = CLOSED;
@@ -244,7 +244,7 @@ void closeValve(){
 		}
 
 		
-		if(calc_volt <= 4.1){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
+		if(calc_volt <= MIN_VOL){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
 			//PORTB_OUTSET = (1<<PIN_GREENLED);
 			//PORTB_OUTSET = (1<<BLUE_LED);
 			motState = CLOSED;
@@ -252,7 +252,7 @@ void closeValve(){
 		}
 		
 	
-		PORTB_OUTCLR = (1<<BLUE_LED);
+		//PORTB_OUTCLR = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
 		//error = NO_ERROR;
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
@@ -281,11 +281,22 @@ valveError getValveError(){
 	return error;
 }
 
+uint16_t map(double x, double in_min, double in_max, double out_min, double out_max) {
+	return out_min + ((x - in_min) * (out_max - out_min)) / (in_max - in_min);
+}
+
+void dynamic_delay(volatile uint16_t delay_variable) {
+    while (delay_variable--) {
+        _delay_ms(1);  // 1 millisecond delay
+    }
+}
+
 
 ISR(PORTA_PORT_vect)
 {
 	if(PA5_INTERRUPT && motState == CLOSING)
 	{
+		dynamic_delay(map(calc_volt, MIN_VOL, MAX_VOL, MAX_MOTOR_CLOSE_DELAY, MAX_MOTOR_CLOSE_DELAY/5));
 		stopMotor();
 		motState = CLOSED;
 		

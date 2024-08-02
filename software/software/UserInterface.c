@@ -11,14 +11,12 @@
 #include "LEDs.h"
 #include "ADC.h"
 #include "valve.h"
+#include "SoilMoistureSensor.h"
 
 UIstate uiState = SHOWNOTHING;
 
 
 uint8_t soilLevel = 4;
-//These adc_treshold values represent the following volumetric soil content values of the SoilWatch 10 Sensor: 17%,21%,25%,29%,33%,37%,41%,45%
-uint16_t adc_tresholds[] = {563,656,731,794,847,894,937,975};
-
 uint8_t multiplicator = 1;
 
 
@@ -27,17 +25,26 @@ uint8_t secondCounter = 0;
 uint16_t milliSecondCounter = 0;
 
 
-
 void changeThresholds(){
 	// Magic number 102 because ADC returns value between 0 and 1023, we have 8 configurable threshold levels and 2 two upper levels are reserved to give the sensor a chance to detect when sensor is wet at the upper levels. 1023/10 = ~102
 	// Closing threshold has to be higher because if ADC delivers exactly a value on the borderline its likely that the valve cant decide if it should be open or closed.
 	
-	//This is the linear approach
-	//currentThresholds.tresholdOpen = soilLevel * 102;
-	//currentThresholds.thresholdClose = currentThresholds.tresholdOpen + 102;
+	currentThresholds.tresholdOpen = getSensorTreshold(soilLevel-1);
+	currentThresholds.thresholdClose = currentThresholds.tresholdOpen + 25;
 
-	currentThresholds.tresholdOpen = adc_tresholds[soilLevel-1];
-	currentThresholds.thresholdClose = adc_tresholds[soilLevel-1]+25;
+	//This is the linear approach
+	/*
+	if(LINEAR_SENSOR){
+		currentThresholds.tresholdOpen = soilLevel * ADCSTEPS;
+		currentThresholds.thresholdClose = currentThresholds.tresholdOpen + ADCSTEPS/2;
+	}else{
+		currentThresholds.tresholdOpen = adc_trehsolds[soilLevel-1];
+		currentThresholds.thresholdClose = adc_trehsolds[soilLevel-1]+25;
+	}
+	*/
+	
+
+	
 }
 
 void initUI(){

@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include "ADC.h"
 #include "valve.h"
+#include "SoilMoistureSensor.h"
 
 
 
@@ -52,7 +53,7 @@ uint16_t ADC_0_readCurrent(){
 
 	//ADC0.CTRLC |= ADC_ASDV_ASVON_gc;
 	ADC0.SAMPCTRL = 0;
-	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC16_gc, PIN_CURRENTSENS_CHANNEL);
+	return getADCValue(ADC_PRESC_DIV4_gc, SAMPLE_ACCUM, PIN_CURRENTSENS_CHANNEL);
 	
 }
 
@@ -63,15 +64,17 @@ uint16_t ADC_0_readSoilMoisture(){
 
 	uint16_t adc_result_soil = 0;
 
-	ADC0.CTRLC = ADC_PRESC_DIV4_gc								/* CLK_PER divided by 16 */
-	| ADC_REFSEL_INTREF_gc;										/* VDD as reference */
+	ADC0.CTRLC = ADC_PRESC_DIV4_gc								//CLK_PER divided by 16
+	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
+	//ADC0.CTRLC = ADC_PRESC_DIV4_gc							/* CLK_PER divided by 16 */
+	//| ADC_REFSEL_INTREF_gc;									/* Internal as reference */
 	ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
 	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
 	ADC0.MUXPOS  = PIN_SOILSENSOR;								//Select channel
 	//ADC0.INTCTRL &= ~ADC_RESRDY_bm;								//Disable Interrupt Vector
-		
-	VREF_CTRLA = VREF_ADC0REFSEL_1V1_gc;						//Set internal ADC Reference to 1.1V
+	
+	//VREF_CTRLA = VREF_ADC0REFSEL_1V1_gc;						//Set internal ADC Reference to 1.1V
 		
 	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
 	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
