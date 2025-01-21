@@ -49,12 +49,31 @@ uint16_t ADC_0_readBatteryVoltage(){
 	
 }
 
-uint16_t ADC_0_readCurrent(){
+void prepareReadingCurrent(uint8_t shiftRight){
+	ADC0.SAMPCTRL = 0;
+
+	ADC0.CTRLC = ADC_PRESC_DIV4_gc								//CLK_PER divided by 16
+	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
+	ADC0.CTRLB = shiftRight;
+	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
+	//ADC0.CTRLA &= ~(1 << ADC_FREERUN_bp);						//Disable ADC Freerun mode
+	ADC0.MUXPOS  = PIN_CURRENTSENS_CHANNEL;										//Select channel
+	//ADC0.INTCTRL &= ~ADC_RESRDY_bm;								//Disable Interrupt Vector
+}
+
+uint16_t ADC_0_readCurrent(uint8_t shiftRight){
 
 	//ADC0.CTRLC |= ADC_ASDV_ASVON_gc;
-	ADC0.SAMPCTRL = 0;
-	return getADCValue(ADC_PRESC_DIV4_gc, SAMPLE_ACCUM, PIN_CURRENTSENS_CHANNEL);
+	//ADC0.SAMPCTRL = 0;
+	//return getADCValue(ADC_PRESC_DIV4_gc, SAMPLE_ACCUM, PIN_CURRENTSENS_CHANNEL);
+	uint16_t adc_result = 0;
 	
+	ADC0.COMMAND = ADC_STCONV_bm;								//Start Conversion
+	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
+	adc_result = read_adc_sample_accumulator(shiftRight);			//Read Result
+	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
+	
+	return adc_result;
 }
 
 uint16_t ADC_0_readSoilMoisture(){

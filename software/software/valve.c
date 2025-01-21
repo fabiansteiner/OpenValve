@@ -69,7 +69,7 @@ void stopMotor(){
 void openValve(){
 	if(motState == CLOSED && error == NO_ERROR){
 
-
+		prepareReadingCurrent(SAMPLE_ACCUM_OPEN);
 		//calc_volt = 5.0;
 		timeCounter = 0;
 		//short_resistance = 50.0;
@@ -116,14 +116,21 @@ void openValve(){
 
 		while(motState == OPENING && timeCounter <= OPEN_TIMEOUT){
 
-			currentADC = ADC_0_readCurrent();
-			calc_curr  = (currentADC * MAX_CUR) / RES_10BIT;
-			voltageADC = ADC_0_readBatteryVoltage();
-			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
+			currentADC = ADC_0_readCurrent(SAMPLE_ACCUM_OPEN);
+			//calc_curr  = (currentADC * MAX_CUR) / RES_10BIT;
+			//voltageADC = ADC_0_readBatteryVoltage();
+			//calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > OPEN_CURRENT){
-				stopMotor();
+			if(currentADC > OPEN_CURRENT_LIMIT_ADC){
+				//stopMotor();
+
+				PORTA_OUTCLR = (1<<PIN_MOTORMINUS); // set HIGH;
+				PORTB_OUTSET = (1<<PIN_MOTORPLUS);
+				_delay_ms(100);
+				//Turn off
+				PORTB_OUTCLR = (1<<PIN_MOTORPLUS);
+
 				motState = OPEN;
 				break;
 			}
@@ -132,7 +139,8 @@ void openValve(){
 
 		}
 
-		PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
+		stopMotor();
+		//PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
 		motState = OPEN;
 		
 
@@ -154,7 +162,7 @@ void closeValve(){
 	
 	if(motState == OPEN && error == NO_ERROR){
 		
-
+		prepareReadingCurrent(SAMPLE_ACCUM_CLOSE);
 		//calc_volt = 5.0;
 		timeCounter = 0;
 		//short_resistance = 50.0;
@@ -217,13 +225,16 @@ void closeValve(){
 
 		while(motState == CLOSING && timeCounter <= CLOSE_TIMEOUT){	//Was at 1400
 
-			currentADC = ADC_0_readCurrent();
-			calc_curr  = (currentADC * MAX_CUR) / RES_10BIT;
-			voltageADC = ADC_0_readBatteryVoltage();
-			calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
+			currentADC = ADC_0_readCurrent(SAMPLE_ACCUM_CLOSE);
+			
+			//Voltage cannot be read while moving the motor right now, because switching between ADC channels after every measurement takes too much time.
+			 
+			//calc_curr  = (currentADC * MAX_CUR) / RES_10BIT;
+			//voltageADC = ADC_0_readBatteryVoltage();
+			//calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 			
 
-			if(calc_curr > CLOSE_CURRENT){
+			if(currentADC > CLOSE_CURRENT_LIMIT_ADC){
 					
 				stopMotor();
 				motState = CLOSED;

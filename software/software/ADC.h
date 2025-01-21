@@ -42,7 +42,9 @@ uint16_t ADC_0_readSoilMoisture();
 
 uint16_t ADC_0_readBatteryVoltage();
 
-uint16_t ADC_0_readCurrent();
+void prepareReadingCurrent(uint8_t shiftRight);
+
+uint16_t ADC_0_readCurrent(uint8_t shiftRight);
 
 uint16_t getADCValue(uint8_t prescaler, uint8_t accumulation, uint8_t ADC_pin);
 
