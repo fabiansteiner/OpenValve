@@ -13,17 +13,17 @@
 #ifndef VALVE_H_
 #define VALVE_H_
 
-#define OPEN_CURRENT 0.40
+#define OPEN_CURRENT 0.45
 #define CLOSE_CURRENT 0.79
 //#define SAMPLE_ACCUM ADC_SAMPNUM_ACC16_gc
 
-#define SAMPLE_ACCUM_OPEN ADC_SAMPNUM_ACC8_gc
-#define SAMPLE_ACCUM_CLOSE ADC_SAMPNUM_ACC32_gc
+#define SAMPLE_ACCUM_OPEN ADC_SAMPNUM_ACC1_gc
+#define SAMPLE_ACCUM_CLOSE ADC_SAMPNUM_ACC64_gc
 
 //#define MAX_MOTOR_CLOSE_DELAY 150					//when Motor Parts are printed in PC Blend
 #define MAX_MOTOR_CLOSE_DELAY 50					//when Motor Parts are printed in ASA
 
-#define OPEN_TIMEOUT 6000
+#define OPEN_TIMEOUT 20000
 #define CLOSE_TIMEOUT 6000
 
 #define PIN_MOTORPLUS 1		//PORTB
