@@ -41,12 +41,12 @@ void initializeValve(){
 	PORTA_DIRSET = (1<<PIN_MOTORMINUS);
 	
 	PORTA.DIR &= ~ PIN5_bm;												//Set as input
-	PORTA.PIN5CTRL |= PORT_PULLUPEN_bm | PORT_ISC_FALLING_gc;			//Enable Pull-UP & enable interrupt on falling edge
+	PORTA.PIN5CTRL |= PORT_ISC_RISING_gc;			//Enable Pull-UP & enable interrupt on falling edge
 	
 	_delay_ms(100);														//Let the pull-up take effect
 
 
-	if((PORTA_IN & (1<<PIN_MOTORSTOP))==0){
+	if((PORTA_IN & (1<<PIN_MOTORSTOP))!=0){
 		motState = CLOSED;
 	}else{
 		//PORTB_OUTSET = (1<<BLUE_LED);
@@ -68,7 +68,8 @@ void stopMotor(){
 
 void openValve(){
 	if(motState == CLOSED && error == NO_ERROR){
-
+		
+		PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on Motor Driver
 		prepareReadingCurrent(SAMPLE_ACCUM_OPEN);
 		//calc_volt = 5.0;
 		timeCounter = 0;
@@ -151,7 +152,8 @@ void openValve(){
 		
 		//PORTB_OUTSET = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		//error = NO_ERROR;
+		error = NO_ERROR;
+		PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off motor driver
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 	}
 }
@@ -162,6 +164,7 @@ void closeValve(){
 	
 	if(motState == OPEN && error == NO_ERROR){
 		
+		PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on Motor Driver
 		prepareReadingCurrent(SAMPLE_ACCUM_CLOSE);
 		//calc_volt = 5.0;
 		timeCounter = 0;
@@ -265,7 +268,8 @@ void closeValve(){
 	
 		//PORTB_OUTCLR = (1<<BLUE_LED);
 		//IGNORE ERROR STATES FOR DEV
-		//error = NO_ERROR;
+		error = NO_ERROR;
+		PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off motor driver
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
 		
 	

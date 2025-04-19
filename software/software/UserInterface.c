@@ -167,7 +167,7 @@ pressType senseMagneticSwitch(){
 	static uint8_t alreadyPressed = 0;
 	pressType press = NONE;
 
-	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))==0){
+	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
 		//User Pressed something, reset Timeout Variables
 		milliSecondCounter = 0;
 		secondCounter = 0;

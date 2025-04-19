@@ -37,7 +37,7 @@ uint8_t executeMultiplicator = 0;
 
 
 
-#define PB0_LOW !(PORTB.IN & PIN0_bm)
+#define PB0_HIGH (PORTB.IN & PIN0_bm)
 #define PB0_INTERRUPT PORTB.INTFLAGS & PIN0_bm
 #define PB0_CLEAR_INTERRUPT_FLAG PORTB.INTFLAGS &= PIN0_bm
 
@@ -80,7 +80,7 @@ ISR(PORTB_PORT_vect)
 	
 	if(PB0_INTERRUPT)
 	{
-		if(PB0_LOW){
+		if(PB0_HIGH){
 			if(mState != ACTIVE && mState != PERIODICWAKEUP){
 				buttonSensingOn = 0;
 				disablePITInterrupt();
