@@ -6,7 +6,7 @@
  */ 
 
 #define F_CPU 3333333
-#define MULTIPLICATOR_TIME_LIMIT 7200	//2 Stunden
+#define MULTIPLICATOR_TIME_LIMIT 7200 // 640 oder 32 Test - 7200 = 2 Stunden Prod
 
 #include "common.h"
 #include "ADC.h"
@@ -27,7 +27,7 @@ volatile mainStates mState = SLEEP;
 volatile uint8_t wakeUpCycles = 1;
 volatile uint8_t sleepCounter = 0;
 volatile uint8_t manualIrrigation = 0;
-volatile uint8_t buttonSensingOn = 0;
+volatile uint8_t buttonSensingOn = 0;		//Used to check if the button is being pressed or not, if 0 button is being pressed, if 1 button is currently not pressed, but only goes 0 when button is pressed in state SLEEP or OFF
 
 volatile uint16_t irrigationTimeCounter = 0;
 volatile uint8_t currentSleepTime = 4;
@@ -91,10 +91,9 @@ ISR(PORTB_PORT_vect)
 					irrigationTimeCounter = 0;
 
 					if(getValveError() == NO_ERROR){
-						state_change changeOfState = changeUIState(SHORT);
-						changeLEDAnimation(changeOfState);
+						uiState = SHOWBATTERY;
+						changeLEDAnimation(FROM_SHOWNOTHING_TO_SHOWBATTERY);
 					}else{
-						//Direct access to UI state, because changeUIState only takes button presses an input and this input is not triggered from the user
 						uiState = ERRORSTATE;
 						changeLEDAnimation(SHOW_ERROR);
 					}
@@ -140,12 +139,15 @@ void changePIT(uint8_t prescaler, uint8_t cycles){
 
 void changePITInterval(){
 	if(getValveState() == OPEN){
-		if(irrigationTimeCounter <= 180){ //180
-			changePIT(RTC_PRESCALER_DIV2048_gc, 1); currentSleepTime = 4;	//4 seconds
-		}else if (irrigationTimeCounter <= 592){
+		if(irrigationTimeCounter <= 180){ //24 Test - 180 Prod
+			changePIT(RTC_PRESCALER_DIV1024_gc, 2); currentSleepTime = 4;	//4 seconds important comment: changePIT(RTC_PRESCALER_DIV2048_gc, 1); does not work, because after the valve goes into sleep mode i cannot wakup by button press until the next periodic wakeup, this only occurs with this specific setting
+			//changePIT(RTC_PRESCALER_DIV128_gc, 2); currentSleepTime = 4;
+		}else if (irrigationTimeCounter <= 596){ //104 Test - 592 Prod
 			changePIT(RTC_PRESCALER_DIV8192_gc, 1); currentSleepTime = 16;	//16 seconds
+			//changePIT(RTC_PRESCALER_DIV1024_gc, 1); currentSleepTime = 16;
 		}else{
-			changePIT(RTC_PRESCALER_DIV16384_gc, 2); currentSleepTime = 60;	//1 minute
+			changePIT(RTC_PRESCALER_DIV16384_gc, 2); currentSleepTime = 64;	//~1 minute
+			//changePIT(RTC_PRESCALER_DIV2048_gc, 2); currentSleepTime = 64;
 		}
 
 
@@ -172,7 +174,6 @@ int main(void)
 {
 	sei();
 	
-	
 	initSleep();
 	initLEDs();
 	//uart_init(9600);
@@ -184,8 +185,6 @@ int main(void)
 	_delay_ms(100);			//Let setting settle in
 	uint16_t SM;
 	uint8_t motorStateChanged = 0;
-
-	
 	
 	sleep_mode();
 	
@@ -206,7 +205,8 @@ int main(void)
 				if(mState == ACTIVE){
 				
 					pressType button_press = NONE;
-				
+					
+					
 					if(buttonSensingOn){
 						button_press = senseMagneticSwitch();
 					}
@@ -217,27 +217,29 @@ int main(void)
 					//Do not count timeout when in manual irrigation mode
 					if(getUIState()!=MANUALIRRIGATION){
 						state_change timeOutStateChange = countUITimeOut();
-						if(timeOutStateChange == UI_OFF || timeOutStateChange == UI_OFF_WITHOUT_CONFIRMING){changeOfState = timeOutStateChange;}
+						if(timeOutStateChange != NO_CHANGE){changeOfState = timeOutStateChange;}
 					}
+
+					changeLEDAnimation(changeOfState);
+					cycleLEDAnimation();
 				
-					if(changeOfState == FROM_SHOWBATTERY_TO_MANUALIRRIGATION){
+					if(changeOfState == FROM_SHOWSOILMOISTURE_TO_MANUALIRRIGATION){
 						manualIrrigation = 1;
 						openValve();
-					}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWBATTERY){
+					}else if (changeOfState == FROM_MANUALIRRIGATION_TO_SHOWSOILMOISTURE){
 						manualIrrigation = 0;
 						closeValve();
 						irrigationTimeCounter=0;
 						miliSecCounter=0;
 					}
 				
-					changeLEDAnimation(changeOfState);
-					cycleLEDAnimation();
+					
 				
 					if(changeOfState == UI_SHUTDOWN){switchOFF(); continue;}
 				}
 
 			
-				//If manual irrigation off = normal operation
+				//If manual irrigation off = normal operation = Take Soil Moisuture Measurement and Open/Close
 				if(manualIrrigation == 0 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY/2);
 					PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
@@ -256,14 +258,15 @@ int main(void)
 								
 								uint16_t newIrrigationTimeCounter = irrigationTimeCounter * (0.5f * (getCurrentMultiplicator()-1));
 								
-								//Limit total irrigation time to 2 hours
-								if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){
-									closeValve();
-									irrigationTimeCounter = 0;
-								}else if ((irrigationTimeCounter + newIrrigationTimeCounter) > MULTIPLICATOR_TIME_LIMIT){
-									irrigationTimeCounter = MULTIPLICATOR_TIME_LIMIT-irrigationTimeCounter;	
+								
+								if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){ //If irrigation time already bigger than 2 hours then just close
+									//This case is now handled in later logic, where error is thrown for wrong sensor placement
+									//closeValve();
+									//irrigationTimeCounter = 0;
+								}else if ((irrigationTimeCounter + newIrrigationTimeCounter) > MULTIPLICATOR_TIME_LIMIT){	//If calculated irrigation would be bigger than 2 hours then set time so it is maximum 2 hours.
+									irrigationTimeCounter = (MULTIPLICATOR_TIME_LIMIT - irrigationTimeCounter)-4;	//-4 for accuracy
 									executeMultiplicator = 1;
-								}else{
+								}else{			//Otherwise just use the calculated time using the set multiplicator
 									irrigationTimeCounter = newIrrigationTimeCounter;
 									executeMultiplicator = 1;
 								}
@@ -287,7 +290,7 @@ int main(void)
 						irrigationTimeCounter++;
 						miliSecCounter=0;
 						
-						if(irrigationTimeCounter >= 900){	//15min timout
+						if(irrigationTimeCounter >= 900){	//900=15min timout
 							//Simulate button press
 							changeUIState(SHORT);
 							
@@ -296,7 +299,7 @@ int main(void)
 							irrigationTimeCounter=0;
 							miliSecCounter=0;
 							
-							changeLEDAnimation(FROM_MANUALIRRIGATION_TO_SHOWBATTERY);
+							changeLEDAnimation(FROM_MANUALIRRIGATION_TO_SHOWSOILMOISTURE);
 							cycleLEDAnimation();
 						}
 					}
@@ -304,7 +307,7 @@ int main(void)
 					
 					
 				}else if (executeMultiplicator == 1){
-					// Close, when multiplicator executed or state changes to active
+					// Close, when multiplicator time was executed or state changes to active
 					if(irrigationTimeCounter < 5 || mState == ACTIVE){
 						closeValve();
 						executeMultiplicator = 0;
@@ -313,64 +316,80 @@ int main(void)
 					
 				}
 
-				//If error occured after driving the motor, change to error state and exit loop
+				//If error occured after driving the motor, change to error state
 				if(getValveError() != NO_ERROR){
 					//PIT interval to 4 sec
 					changePIT(RTC_PRESCALER_DIV2048_gc, 1);
 					uiState = ERRORSTATE;
 					if(mState == ACTIVE) changeLEDAnimation(SHOW_ERROR);
-					continue;
-				}
-
-			
-				if(mState == PERIODICWAKEUP){
 					
-					changePITInterval();
-					if (getValveState() == OPEN && executeMultiplicator == 0) {
-						if (irrigationTimeCounter < MULTIPLICATOR_TIME_LIMIT+10)
-						irrigationTimeCounter += currentSleepTime;
-					}else if (executeMultiplicator == 1 && irrigationTimeCounter >= currentSleepTime){
-						irrigationTimeCounter -= currentSleepTime;
-					}
-					
-					
-						
-					
-					
-					sleepCounter = 0;
-					motorStateChanged = 0;
-					mState = SLEEP;
-					PORTB_OUTCLR = (1<<BLUE_LED);
-					enablePORTBInterrupt();
-					sleep_mode();
-				
-				}else if(mState == ACTIVE){
-				
-					if(getLEDAnimation() == NO_ANIMATION){
+				}else if (getValveError() == NO_ERROR){
+					//If no error occured process normal operation
+					if(mState == PERIODICWAKEUP){
 						changePITInterval();
+						if (getValveState() == OPEN && executeMultiplicator == 0) {
+							if (irrigationTimeCounter < (MULTIPLICATOR_TIME_LIMIT - currentSleepTime)){
+								irrigationTimeCounter += currentSleepTime;
+							}else{
+								//Valve open for longer than 2 hours -> Sensor Placement Wrong or Water Not Flowing
+								closeValve();
+								if(getValveError() == NO_ERROR){
+									setValveError(WRONG_SENSOR_PLACEMENT);
+								}
+								irrigationTimeCounter = 0;
+								changePIT(RTC_PRESCALER_DIV2048_gc, 1); //PIT interval to 4 sec
+								uiState = ERRORSTATE;
+
+							}
+								
+
+						}else if (executeMultiplicator == 1 && irrigationTimeCounter >= currentSleepTime){
+							irrigationTimeCounter -= currentSleepTime;
+						}
+						
+						
 						sleepCounter = 0;
 						motorStateChanged = 0;
 						mState = SLEEP;
 						PORTB_OUTCLR = (1<<BLUE_LED);
-						enablePITInterrupt();
+						enablePORTBInterrupt();
 						sleep_mode();
-					}
 				
+					}else if(mState == ACTIVE){
+						//Whenever the animation is NO_ANIMATION, the valve switches to sleep mode
+						if(getLEDAnimation() == NO_ANIMATION){
+							changePITInterval();
+							sleepCounter = 0;
+							motorStateChanged = 0;
+							mState = SLEEP;
+							enablePORTBInterrupt();
+							//_delay_ms(500);
+							enablePITInterrupt();
+							PORTB_OUTCLR = (1<<BLUE_LED);
+							sleep_mode();
+						}
+					
+					}
 				}
 			}else{
 			//valve error occured
 				if (mState == ACTIVE){
 					//Show the errors
-					senseMagneticSwitch();
-
+					pressType buttonPress = NONE;
 					
+					if(buttonSensingOn){
+						buttonPress = senseMagneticSwitch();
+					}
+					state_change changeOfState = changeUIState(buttonPress);
+
 					state_change timeOutStateChange = countUITimeOut();
+					if(timeOutStateChange != NO_CHANGE){changeOfState = timeOutStateChange;}
 					
 
 					_delay_ms(MAINLOOP_DELAY);
 
-					changeLEDAnimation(timeOutStateChange);
-					cycleLEDAnimation();
+					changeLEDAnimation(changeOfState);
+
 
 					if(getLEDAnimation() == NO_ANIMATION){
 						sleepCounter = 0;
@@ -398,9 +417,11 @@ int main(void)
 			sleep_mode();
 		}else if(mState == OFF){
 			
-			if(buttonSensingOn == 0){	//As long as the is pressed
+			if((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){	//As long as the button is pressed
 				
 				pressType button_press = senseMagneticSwitch();
+				
+
 				if(button_press == VERYLONG){
 					
 					mState = ACTIVE;

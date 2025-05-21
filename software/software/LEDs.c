@@ -24,7 +24,7 @@ volatile uint16_t animationCounter = 0;
 #define MAX_LEVEL 48*ONESTEP
 #define MIN_LEVEL 2*ONESTEP
 
-volatile uint16_t batteryLevel;
+volatile uint8_t batteryLevel;
 volatile uint8_t cycle = 0;
 volatile uint8_t cycleCounter = 0;
 volatile uint16_t greenBrightness = 132;
@@ -37,6 +37,7 @@ void animateBlinking(char color, uint16_t delay);
 void animateManualIrrigation();
 void animateTransition(uint8_t confirm);	//Blink green led two times
 void animateBatteryLevel();		//From red to green to red to battery state
+void animateSoilMoisture();
 void animateSelectThreshold();	//Glow Orange
 void animateSelectMultiplicator();	//Glow Red
 void animateChangeSoilThreshold();	//Blink as many times as currentThresholdLevel, then stop for a second
@@ -44,7 +45,7 @@ void animateChangeMultiplicator();			//Blink led red, the higher the interval le
 void animateValveErrors();
 void stopLEDs();
 
-
+/*
 void cycleBatteryLevelAnimation(){
 	
 	//if + else = 1ms
@@ -105,6 +106,7 @@ void cycleBatteryLevelAnimation(){
 	}
 	
 }
+*/
 
 ISR(TCA0_OVF_vect)
 {
@@ -142,15 +144,15 @@ ISR(TCA0_OVF_vect)
 				(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 	}else if(ongoingAnimation == A_TRANSITIONING_STARTUP){
-		if (animationCounter < 2){
-			PORTA.OUTTGL = (1<<PIN_REDLED); 
+		if (animationCounter < 6){
+			//PORTA.OUTTGL = (1<<PIN_REDLED); 
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
-			PORTB.OUTTGL = (1<<BLUE_LED);
+			//PORTB.OUTTGL = (1<<BLUE_LED);
 			animationCounter++;
-		}else if (animationCounter >=2 && animationCounter<6){
+		}else if (animationCounter >=6 && animationCounter<10){
 			//Wait a little bit
 			animationCounter++;
-		}else if (animationCounter >=6 && animationCounter<VERSION_ANIMATION_COUNT1){
+		}else if (animationCounter >=10 && animationCounter<VERSION_ANIMATION_COUNT1){
 			//Toggle RED led to indicate MAJOR version
 			PORTA.OUTTGL = (1<<PIN_REDLED); 
 			animationCounter++;
@@ -167,15 +169,50 @@ ISR(TCA0_OVF_vect)
 			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 	}else if(ongoingAnimation == A_BATTERY){
-		cycleBatteryLevelAnimation();
-	}else if(ongoingAnimation == A_CHANGETHRESHOLD){
-		if (animationCounter < soilLevel*2){
+		//cycleBatteryLevelAnimation();		//Smooth Indication
+
+		if (animationCounter < 1){
+			PORTA.OUTSET = (1<<PIN_REDLED); 
+			animationCounter++;
+		}else if (animationCounter >=1 && animationCounter<2){
+			PORTB.OUTSET = (1<<PIN_GREENLED);
+			animationCounter++;
+		}else if (animationCounter >=2 && animationCounter<3){
+			PORTA.OUTCLR = (1<<PIN_REDLED); 
+			animationCounter++;
+		}else if (animationCounter >=3 && animationCounter<4){
+			if(batteryLevel == 3){
+				//Turn off counter
+				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+			}else{
+				PORTA.OUTSET = (1<<PIN_REDLED); 
+				animationCounter++;
+			}
+		}else if (animationCounter >=4 && animationCounter<5){
+			if(batteryLevel == 2){
+				//Turn off counter
+				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+			}else{
+				PORTB.OUTCLR = (1<<PIN_GREENLED);
+				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+			}
+		}
+	}else if(ongoingAnimation == A_SELECTTHRESHOLD){
+		PORTB.OUTTGL = (1<<PIN_GREENLED);
+	}else if(ongoingAnimation == A_SELECTMULTIPLICATOR){
+		PORTB.OUTTGL = (1<<PIN_GREENLED);
+		PORTA.OUTTGL = (1<<PIN_REDLED); 
+	}else if(ongoingAnimation == A_CHANGETHRESHOLD || ongoingAnimation == A_SOILMOISTURE){
+		uint8_t soilLevelSource = soilLevel;
+		if(ongoingAnimation == A_SOILMOISTURE)
+			soilLevelSource = currentSoilMoistureLevel; 
+		if (animationCounter < soilLevelSource*2){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			//PORTA.OUTTGL = (1<<PIN_REDLED);
 			animationCounter++;
 		}else{
 			animationCounter++;
-			if(animationCounter > soilLevel*2+8){
+			if(animationCounter > soilLevelSource*2+8){
 				animationCounter = 0;
 			}
 		}
@@ -245,77 +282,25 @@ void initLEDs(){
 	TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);		//Count steps, not events
 }
 
-void animateVersionNumber(){
-/*
-if (animationCounter < 2){
-	PORTA.OUTTGL = (1<<PIN_REDLED);
-	PORTB.OUTTGL = (1<<PIN_GREENLED);
-	PORTB.OUTTGL = (1<<BLUE_LED);
-	animationCounter++;
-	}else if (animationCounter >=2 && animationCounter<6){
-	//Wait a little bit
-	animationCounter++;
-	}else if (animationCounter >=6 && animationCounter<VERSION_ANIMATION_COUNT1){
-	//Toggle RED led to indicate MAJOR version
-	PORTA.OUTTGL = (1<<PIN_REDLED);
-	animationCounter++;
-	}else if (animationCounter >=VERSION_ANIMATION_COUNT1 && animationCounter<VERSION_ANIMATION_COUNT2){
-	//Toggle green led to indicate Minor version
-	PORTB.OUTTGL = (1<<PIN_GREENLED);
-	animationCounter++;
-	}else if (animationCounter >=VERSION_ANIMATION_COUNT2 && animationCounter<VERSION_ANIMATION_COUNT3){
-	//Wait a bit
-	animationCounter++;
-	}else{
-	//Turn off counter
-	TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
-	(*func_ptr)(); //Call appropriate function that was assigned when changing the state
-}
-*/
-
-	ongoingAnimation = A_TRANSITIONING_STARTUP;
-
-	PORTA.OUTTGL = (1<<PIN_REDLED);
-	PORTB.OUTTGL = (1<<PIN_GREENLED);
-	PORTB.OUTTGL = (1<<BLUE_LED);
-
-	_delay_ms(300);
-
-	PORTA.OUTTGL = (1<<PIN_REDLED);
-	PORTB.OUTTGL = (1<<PIN_GREENLED);
-	PORTB.OUTTGL = (1<<BLUE_LED);
-
-	_delay_ms(1000);
-
-	for(uint8_t i = 0; i < VERSION_MAJOR * 2; i++){
-		PORTA.OUTTGL = (1<<PIN_REDLED);
-		_delay_ms(250);
-	}
-
-
-	for(uint8_t i = 0; i < VERSION_MINOR * 2; i++){
-		PORTB.OUTTGL = (1<<PIN_GREENLED);
-		_delay_ms(250);
-	}
-	_delay_ms(750);
-
-	animateBatteryLevel();
-}
 
 
 void changeLEDAnimation(state_change change){
 	
 	
 	switch(change){
-		case UI_STARTUP: /*animateVersionNumber();*/ batteryLevel = getBatteryLevel(); func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
+		case UI_STARTUP: /*animateVersionNumber();*/ batteryLevel = getBatteryLevel3Indications(); func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
 		break;
-		case FROM_SHOWNOTHING_TO_SHOWBATTERY: batteryLevel = getBatteryLevel(); animateBatteryLevel();
+		case FROM_SHOWNOTHING_TO_SHOWBATTERY: batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
 		break;
 		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition(LED_CONFIRM);	//Transition
 		break;
-		case FROM_SHOWBATTERY_TO_MANUALIRRIGATION: animateManualIrrigation();
+		case FROM_SHOWBATTERY_TO_SHOWSOILMOISTURE: animateSoilMoisture();
 		break;
-		case FROM_MANUALIRRIGATION_TO_SHOWBATTERY: batteryLevel = getBatteryLevel(); animateBatteryLevel();
+		case FROM_SHOWSOILMOISTURE_TO_SHOWBATTERY:  batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
+		break;
+		case FROM_SHOWSOILMOISTURE_TO_MANUALIRRIGATION: animateManualIrrigation();
+		break;
+		case FROM_MANUALIRRIGATION_TO_SHOWSOILMOISTURE: animateSoilMoisture();
 		break;
 		case FROM_SELECTTHRESHOLD_TO_SELECTMULTIPLICATOR: animateSelectMultiplicator();
 		break;
@@ -337,6 +322,8 @@ void changeLEDAnimation(state_change change){
 		break;
 		case SHOW_ERROR: animateValveErrors();
 		break;
+		case FROM_SHOW_ERROR_TO_SHOWBATTERY: batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
+		break;
 		default:
 		break;
 		
@@ -351,11 +338,11 @@ void changeLEDAnimation(state_change change){
 void cycleLEDAnimation(){
 	if(ongoingAnimation == A_MANUALIRRIGATION){
 		animateManualIrrigation();
-	}else if(ongoingAnimation == A_SELECTMULTIPLICATOR){
-		animateSelectMultiplicator();
-	}else if(ongoingAnimation == A_SELECTTHRESHOLD){
-		animateSelectThreshold();
-	}
+	}//else if(ongoingAnimation == A_SELECTMULTIPLICATOR){
+	//	animateSelectMultiplicator();
+	//}else if(ongoingAnimation == A_SELECTTHRESHOLD){
+	//	animateSelectThreshold();
+	//}
 }
 
 
@@ -388,15 +375,31 @@ void animateTransition(uint8_t confirm){
 void animateBatteryLevel(){
 
 	
-	
-
 	ongoingAnimation = A_BATTERY;
 
-	//Set overflow interval to 50khz
+	/*
+	//Set overflow interval to 50khz for smooth transition and many different levels
 	resetTimerSettings();
 	TCA0.SINGLE.PER = 1000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
+	*/
+
+	//Slow animation with only 3 battery indications
+	resetTimerSettings();
+	TCA0.SINGLE.CNT = 9000;
+	TCA0.SINGLE.PER = 10000;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
+
+void animateSoilMoisture(){
+	ongoingAnimation = A_SOILMOISTURE;
+	
+	//Blink as many times as the currentSoilMoistureLevel
+	resetTimerSettings();
+	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+}
+
 
 void animateBlinking(char color, uint16_t delay){
 	static uint16_t milliSecondCounter1 = 0;
@@ -426,26 +429,44 @@ void animateBlinking(char color, uint16_t delay){
 
 void animateSelectThreshold(){
 
+	ongoingAnimation = A_SELECTTHRESHOLD;
+	
+	resetTimerSettings();
+	TCA0.SINGLE.PER = 1350;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+
+	
+	/*
 	if(ongoingAnimation != A_SELECTTHRESHOLD){
 		resetTimerSettings();
 		ongoingAnimation = A_SELECTTHRESHOLD;
 	}
 	
-	//animateBlinking('G', 100);
-	PORTB.OUTSET = (1<<PIN_GREENLED);
+	animateBlinking('G', 100);
+	*/
+	//PORTB.OUTSET = (1<<PIN_GREENLED);
 
 }
 
+
 void animateSelectMultiplicator(){
 
+	ongoingAnimation = A_SELECTMULTIPLICATOR;
+	
+	resetTimerSettings();
+	TCA0.SINGLE.PER = 1350;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+
+	/*
 	if(ongoingAnimation != A_SELECTMULTIPLICATOR){
 		resetTimerSettings();
 		ongoingAnimation = A_SELECTMULTIPLICATOR;
 	}
 	
-	//animateBlinking('O', 100);
-	PORTB.OUTSET = (1<<PIN_GREENLED);
-	PORTA.OUTSET = (1<<PIN_REDLED);
+	animateBlinking('O', 100);
+	*/
+	//PORTB.OUTSET = (1<<PIN_GREENLED);
+	//PORTA.OUTSET = (1<<PIN_REDLED);
 
 
 }
@@ -475,7 +496,7 @@ void animateChangeSoilThreshold(){
 void animateValveErrors(){
 	ongoingAnimation = A_SHOWERRORS;
 	
-	//Blink as many times as currentThresholdLevel, then stop for a second
+	//Blink as many times as the ENUM Value of the current valveError {WRONG_SENSOR_PLACEMENT = 1, LOW_VOLTAGE=2 , HIGH_CURRENT=3, VALVE_TIMEOUT=4, NO_ERROR}
 	resetTimerSettings();
 	TCA0.SINGLE.PER = 2700;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;

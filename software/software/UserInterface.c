@@ -12,6 +12,7 @@
 #include "ADC.h"
 #include "valve.h"
 #include "SoilMoistureSensor.h"
+#include "EEPROM.h"
 
 UIstate uiState = SHOWNOTHING;
 
@@ -48,12 +49,37 @@ void changeThresholds(){
 }
 
 void initUI(){
+	
+	//Check if its the very first startup
+	uint8_t readByte = FLASH_0_read_eeprom_byte(10);
+	if(readByte != 221){
+		//If it is the very first startup, write magic number to magic position to indicate that this is not the first startup
+		FLASH_0_write_eeprom_byte(10, 221);
+		//Also write standard values into eeprom
+		FLASH_0_write_eeprom_byte(0, soilLevel);
+		FLASH_0_write_eeprom_byte(1, multiplicator);
+	}else{
+		//If its is not the very first startup get settings from eeprom
+		readByte = FLASH_0_read_eeprom_byte(0);
+		if(readByte <= 8){
+			soilLevel = readByte;
+		}
+		readByte = FLASH_0_read_eeprom_byte(1);
+		if(readByte <= 5){
+			multiplicator = readByte;
+		}
+	}
+	
+
 	changeThresholds();
 }
 
 void increaseThreshold(){
 	soilLevel++;
 	if(soilLevel >8){ soilLevel = 1;}
+
+	FLASH_0_write_eeprom_byte(0, soilLevel);
+
 	changeThresholds();
 	
 }
@@ -61,6 +87,8 @@ void increaseThreshold(){
 void increaseMultiplicator(){
 	multiplicator++;
 	if(multiplicator > 5) multiplicator = 1;
+
+	FLASH_0_write_eeprom_byte(1, multiplicator);
 }
 
 
@@ -79,16 +107,19 @@ UIstate getUIState(){
 }
 
 
+/*
+ && getValveState()==CLOSED){
+	 uiState = MANUALIRRIGATION;
+	 change = FROM_SHOWBATTERY_TO_MANUALIRRIGATION;
+ }
+*/
+
 
 state_change changeUIState(pressType button_press){
 	//State machine
 	state_change change = NO_CHANGE;
 
 	if(button_press != NONE && button_press != VERYLONG){
-		
-		
-		
-			
 
 		switch(uiState) {
 			case SHOWNOTHING:
@@ -99,15 +130,24 @@ state_change changeUIState(pressType button_press){
 			if(button_press == LONG){
 				uiState = SELECTTHRESHOLD;
 				change = FROM_SHOWBATTERY_TO_SELECTTHRESHOLD;
-				}else if (button_press == SHORT && getValveState()==CLOSED){
+			}else if (button_press == SHORT){
+				uiState = SHOWSOILMOISTURE;
+				change = FROM_SHOWBATTERY_TO_SHOWSOILMOISTURE;
+			}
+			break;
+			case SHOWSOILMOISTURE:
+			if(button_press == LONG && getValveState()==CLOSED){
 				uiState = MANUALIRRIGATION;
-				change = FROM_SHOWBATTERY_TO_MANUALIRRIGATION;
+				change = FROM_SHOWSOILMOISTURE_TO_MANUALIRRIGATION;
+			}else if (button_press == SHORT){
+				uiState = SHOWBATTERY;
+				change = FROM_SHOWSOILMOISTURE_TO_SHOWBATTERY;
 			}
 			break;
 			case MANUALIRRIGATION:
-			if(button_press == SHORT && getValveState()==OPEN){
-				uiState = SHOWBATTERY;
-				change = FROM_MANUALIRRIGATION_TO_SHOWBATTERY;
+			if((button_press == SHORT || button_press == LONG) && getValveState()==OPEN){
+				uiState = SHOWSOILMOISTURE;
+				change = FROM_MANUALIRRIGATION_TO_SHOWSOILMOISTURE;
 			}
 			break;
 			case SELECTTHRESHOLD:
@@ -146,11 +186,19 @@ state_change changeUIState(pressType button_press){
 				change = UI_OFF;
 			}
 			break;
+			case ERRORSTATE:
+			if(button_press == LONG && getValveError() == WRONG_SENSOR_PLACEMENT){
+				//Escape Error State
+				setValveError(NO_ERROR);
+				uiState = SHOWBATTERY;
+				change = FROM_SHOW_ERROR_TO_SHOWBATTERY;
+			}
+			break;
 			default: break;
 		}
 		
 		
-	}else if(button_press == VERYLONG){
+	}else if(button_press == VERYLONG && uiState != ERRORSTATE){
 		uiState = SHOWNOTHING;
 		change = UI_SHUTDOWN;
 	}
@@ -214,11 +262,12 @@ state_change countUITimeOut(){
 			milliSecondCounter = 0;
 		}
 		
-		if(secondCounter >= 16){
+		if(secondCounter >= UI_TIMEOUT){
 			
+			uiState = SHOWNOTHING;
 			change = UI_OFF_WITHOUT_CONFIRMING;
 				
-			uiState = SHOWNOTHING;
+			
 			
 			secondCounter = 0;
 			milliSecondCounter = 0;

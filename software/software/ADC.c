@@ -15,6 +15,7 @@
 #include "SoilMoistureSensor.h"
 
 
+uint16_t currentSoilMoistureLevel = 1;
 
 //volatile uint8_t stateADC = FREE;
 
@@ -45,7 +46,7 @@ uint16_t ADC_0_readBatteryVoltage(){
 
 	//ADC0.CTRLC = 0;
 	ADC0.SAMPCTRL = 31;
-	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC1_gc, PIN_BATTERYSENSING);
+	return getADCValue(ADC_PRESC_DIV4_gc, ADC_SAMPNUM_ACC16_gc, PIN_BATTERYSENSING);
 	
 }
 
@@ -76,6 +77,7 @@ uint16_t ADC_0_readCurrent(uint8_t shiftRight){
 	return adc_result;
 }
 
+
 uint16_t ADC_0_readSoilMoisture(){
 	
 	//Reset Sampling time
@@ -100,7 +102,7 @@ uint16_t ADC_0_readSoilMoisture(){
 	adc_result_soil = read_adc_sample_accumulator(ADC_SAMPNUM_ACC64_gc);									//Read Result
 	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
 		
-	
+	currentSoilMoistureLevel = calculateCurrentSoilMoistureLevel(adc_result_soil);
 	
 	return adc_result_soil;
 	
@@ -131,7 +133,7 @@ uint16_t getADCValue(uint8_t prescaler, uint8_t accumulation, uint8_t ADC_pin){
 	return adc_result;
 	
 }
-
+/*
 uint8_t getBatteryLevel(){
 	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
 	
@@ -143,6 +145,23 @@ uint8_t getBatteryLevel(){
 		return OUTPUT_START;
 	}else{
 		return OUTPUT_START + ((adcVoltage - INPUT_START) * (OUTPUT_END - OUTPUT_START)) / (INPUT_END - INPUT_START);
+	}
+	
+}
+*/
+uint8_t getBatteryLevel3Indications(){
+	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
+	
+	//Convert adc value to battery level 1-3
+	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9.9V, ADC will read 3.3V
+	//Assumption: Battery is LOW if <8.0V, moderate if between 8.0V and 8.5V and full if >8.5V
+	//Map ADC Values to battery level
+	if(adcVoltage < BATTERY_LEVEL_LOW_ADC){
+		return 1;
+	}else if (adcVoltage >= BATTERY_LEVEL_LOW_ADC && adcVoltage <= BATTERY_LEVEL_MEDIUM_ADC){
+		return 2;
+	}else{
+		return 3;
 	}
 	
 }

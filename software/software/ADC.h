@@ -28,10 +28,16 @@
 #define INPUT_END 1023    // The largest number of the range input.
 #define OUTPUT_START 2 // The lowest number of the range output.
 #define OUTPUT_END 48  // The largest number of the range output.
+#define BATTERY_LEVEL_LOW_ADC (uint16_t)(RES_10BIT / MAX_VOL * 8.0)
+#define BATTERY_LEVEL_MEDIUM_ADC (uint16_t)(RES_10BIT / MAX_VOL * 8.5)
+
+
 
 typedef uint16_t adc_result_t;
 typedef ADC_MUXPOS_t adc_0_channel_t;
 typedef enum {FREE = 1, OCCUPIED = 0}  ADCstate;
+
+extern uint16_t currentSoilMoistureLevel;
 
 
 void initADC();
@@ -49,6 +55,7 @@ uint16_t ADC_0_readCurrent(uint8_t shiftRight);
 uint16_t getADCValue(uint8_t prescaler, uint8_t accumulation, uint8_t ADC_pin);
 
 uint8_t getBatteryLevel();
+uint8_t getBatteryLevel3Indications();
 
 
 

@@ -34,8 +34,17 @@
 	//These adc_treshold values represent the following volumetric soil content values of the SoilWatch 10 Sensor: [12,16,20,24,28,32,36,40]%
 	static const uint16_t adc_trehsolds[8] = {378,488,577,649,709,759,803,843};
 
-	static inline uint16_t getSensorTreshold(uint8_t sensorLevel) {
+	static uint16_t getSensorTreshold(uint8_t sensorLevel) {
 		return adc_trehsolds[sensorLevel]; 
+	}
+
+	static uint8_t calculateCurrentSoilMoistureLevel(uint16_t soilMoistureADC){
+		for(uint8_t i = 0; i< 8; i++){
+			if(soilMoistureADC < adc_trehsolds[i]){
+				return i+1;
+			}
+		}
+		return 9;
 	}
 	
 

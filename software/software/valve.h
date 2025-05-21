@@ -23,22 +23,25 @@
 //#define MAX_MOTOR_CLOSE_DELAY 150					//when Motor Parts are printed in PC Blend
 #define MAX_MOTOR_CLOSE_DELAY 50					//when Motor Parts are printed in ASA
 
-#define OPEN_TIMEOUT 20000
-#define CLOSE_TIMEOUT 6000
+#define OPEN_TIMEOUT 30000		//30000
+#define CLOSE_TIMEOUT 1000
 
 #define PIN_MOTORPLUS 1		//PORTB
 #define PIN_MOTORMINUS 6	//PORTA
 #define PIN_MOTORSTOP 5		//PORTA
 
 #define MAX_VOL 9.9
-#define MIN_VOL 4.1
+#define MIN_VOL 4.0
+#define MIN_VOL_BEFORE_DRIVE 7.0
 #define MAX_CUR 1.0			//Bei 0.2 Ohm Shunt
 
 #define OPEN_CURRENT_LIMIT_ADC (uint16_t)(RES_10BIT / MAX_CUR * OPEN_CURRENT)
 #define CLOSE_CURRENT_LIMIT_ADC (uint16_t)(RES_10BIT / MAX_CUR * CLOSE_CURRENT)
+#define MIN_VOLT_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL)
+#define MIN_VOLT_BEFORE_DRIVE_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL_BEFORE_DRIVE)
 
 typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, OPENING = 20, CLOSING = 40}  valveState;
-typedef enum {LOW_VOLTAGE=1 , HIGH_CURRENT=2, VALVE_TIMEOUT=3, NO_ERROR}  valveError;
+typedef enum {WRONG_SENSOR_PLACEMENT = 1, LOW_VOLTAGE=2 , HIGH_CURRENT=3, VALVE_TIMEOUT=4, NO_ERROR}  valveError;
 
 /*
 Errors Meanings
@@ -59,6 +62,7 @@ void changeMotorState();
 valveState getValveState();
 
 valveError getValveError();
+void setValveError(valveError err);
 
 
 
