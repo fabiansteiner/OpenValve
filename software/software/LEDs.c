@@ -30,6 +30,7 @@ volatile uint8_t cycleCounter = 0;
 volatile uint16_t greenBrightness = 132;
 volatile uint8_t msCounter = 0;
 volatile uint8_t countingUp = 1;
+volatile uint8_t soilLevelSource = 0;
 
 
 void showBlueLED();
@@ -203,9 +204,11 @@ ISR(TCA0_OVF_vect)
 		PORTB.OUTTGL = (1<<PIN_GREENLED);
 		PORTA.OUTTGL = (1<<PIN_REDLED); 
 	}else if(ongoingAnimation == A_CHANGETHRESHOLD || ongoingAnimation == A_SOILMOISTURE){
-		uint8_t soilLevelSource = soilLevel;
-		if(ongoingAnimation == A_SOILMOISTURE)
-			soilLevelSource = currentSoilMoistureLevel; 
+		if(animationCounter == 0){
+			soilLevelSource = soilLevel;
+			if(ongoingAnimation == A_SOILMOISTURE)
+			soilLevelSource = currentSoilMoistureLevel;
+		}
 		if (animationCounter < soilLevelSource*2){
 			PORTB.OUTTGL = (1<<PIN_GREENLED);
 			//PORTA.OUTTGL = (1<<PIN_REDLED);
@@ -396,7 +399,7 @@ void animateSoilMoisture(){
 	
 	//Blink as many times as the currentSoilMoistureLevel
 	resetTimerSettings();
-	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.PER = 3000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
 
@@ -489,7 +492,7 @@ void animateChangeSoilThreshold(){
 	
 	//Blink as many times as currentThresholdLevel, then stop for a second
 	resetTimerSettings();
-	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.PER = 3000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
 
@@ -498,7 +501,7 @@ void animateValveErrors(){
 	
 	//Blink as many times as the ENUM Value of the current valveError {WRONG_SENSOR_PLACEMENT = 1, LOW_VOLTAGE=2 , HIGH_CURRENT=3, VALVE_TIMEOUT=4, NO_ERROR}
 	resetTimerSettings();
-	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.PER = 3000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }
 
@@ -507,7 +510,7 @@ void animateChangeMultiplicator(){
 	
 	//Blink as many times as currentThresholdLevel, then stop for a second
 	resetTimerSettings();
-	TCA0.SINGLE.PER = 2700;
+	TCA0.SINGLE.PER = 3000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 	
 	//Blink led red, the higher the multiplicator the faster it blinks%

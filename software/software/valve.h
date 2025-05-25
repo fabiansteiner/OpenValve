@@ -45,9 +45,10 @@ typedef enum {WRONG_SENSOR_PLACEMENT = 1, LOW_VOLTAGE=2 , HIGH_CURRENT=3, VALVE_
 
 /*
 Errors Meanings
-	VOLTAGELOW:		When Voltage got too low (<3,9V) when the valve closed last time, But Valve is Closed and in Safe Position
-	HIGH_CURRENT:	When Current got too high when closing (the valve could potentially damage itself without this), But valve is PROBABLY closed and in safe position, Causes: Button is damaged or out of Range (Housing Deformation), or threshold is set too low
-	VALVE_TIMEOUT:	When the Motor was driving for more than 3 seconds and the valve is not closed AND did not get shut off because of high current, valve is PROBABLY open and in an unsafe position, Causes: Damaged Motor or motor mechanics, Also occurs in the INIT Phase where user wants to bring motor shaft in suitable position
+	WRONG_SENSOR_PLACEMENT: When Valve is open for longer then 2 hours, it is assumed that either the sensor is placed wrong or there is something wrong with the water source or pipes/hoses - this is the only error that can be resolves by just pressing the button
+	VOLTAGELOW:		When Voltage got too low (<4V when driving, <7V before driving). Usually Valve ends up in a safe closed position
+	HIGH_CURRENT:	When Current got too high when closing (the motor could potentially damage itself without this). Causes: End Stop Button is damaged or out of physical Range (Housing Deformation) OR motor gears are broken OR problems with motor brushes or coils. Valve might end up in an open or partly open position.
+	VALVE_TIMEOUT:	When the Motor was driving a certain time and the valve is still not closed. Causes: Damaged Motor Gears, solder error on PCB, disconnected cables to the motor, malfunctioning motor driver IC, motor driver IC in sleep mode. Also occurs while assembling when motor shaft must be turned in a suitable position to attach the valve parts. Valve is probably in an open or partly open position.
 */
 
 //Figure out state of valve, if not closed, close it
