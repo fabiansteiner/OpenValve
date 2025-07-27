@@ -23,8 +23,15 @@
 volatile valveState motState = OPEN;
 volatile valveError error = NO_ERROR;
 
+#define DI_DT_THRESHOLD     1		// Raw ADC difference threshold 
+#define TRIGGER_COUNT_MAX   4		//// Number of consecutive spikes needed to stop
+
 uint16_t voltageADC;
 uint16_t currentADC;
+uint16_t previousADC = 0;
+int16_t deltaCurrent;
+uint8_t trigger_count = 0;
+
 volatile float calc_volt = 5.0;
 float calc_curr;
 float calc_watt;
@@ -92,6 +99,8 @@ void software_pwm_motorMinus(uint16_t high_time, uint16_t low_time) {
 	delay_us_precise(low_time);
 }
 
+
+
 void openValve(){
 	if((motState == CLOSED || motState == UNDEFINED) && error == NO_ERROR){
 		
@@ -107,9 +116,14 @@ void openValve(){
 		
 
 		//clearBuffer(&rb);
-		prepareReadingCurrent(SAMPLE_ACCUM_OPEN);
+		prepareReadingCurrent(SAMPLE_ACCUM_OPEN, ADC_PRESC_DIV16_gc);
 
 		timeCounter = 0;
+		trigger_count = 0;
+
+		uint16_t filteredCurrent = 512;  // Initialize with a high value to start filtering
+		uint8_t enoughSamples = 0;
+		uint8_t sampleCounter = 0;
 
 		motState = OPENING;
 		//PORTA_OUTSET = (1<<PIN_MOTORMINUS); // set HIGH;
@@ -128,14 +142,58 @@ void openValve(){
 
 
 
+		//With a prescaler of 16 and a sample accumulator of 64 the loop time is pretty much exactly 4ms, in that time the motor shaft rotates 0.24 degrees at 10RPM
 		while(motState == OPENING && timeCounter <= OPEN_TIMEOUT){
 
 			currentADC = ADC_0_readCurrent(SAMPLE_ACCUM_OPEN);
 
+			// Apply lightweight IIR filter
+			filteredCurrent = (3 * filteredCurrent + currentADC) / 4;
+			//filteredCurrent = newSample;
+
+			// Approximate dI/dt as difference per call (assuming fixed time step)
+			deltaCurrent = filteredCurrent - previousADC;
+			previousADC = filteredCurrent;
+
+			if(enoughSamples == 0){
+				sampleCounter++;
+				if(sampleCounter >= 4){
+					enoughSamples = 1;
+				}
+			}
+			
+			if(enoughSamples){
+				// Detect sharp rise
+				if (deltaCurrent > DI_DT_THRESHOLD) {
+					trigger_count++;
+				} else {
+					trigger_count = 0;  // Reset on stable current
+				}
+
+				if (trigger_count >= TRIGGER_COUNT_MAX || filteredCurrent >= OPEN_CURRENT_LIMIT_ADC) {
+					
+					//PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
+					//_delay_ms(100);
+					stopMotor();
+					//Carefully open a little
+					for (uint8_t duty = 20; duty <= 40; duty++) {
+						for (uint8_t i = 0; i < 120 ; i++) {
+							software_pwm_motorPlus(duty, 40-duty);
+						}
+					}
+					motState = OPEN;
+					break;
+				}
+			}
+			
+
+			
+			/*
 			if(currentADC > OPEN_CURRENT_LIMIT_ADC){
 
-				PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
-				_delay_ms(100);
+				//PORTA_OUTCLR = (1<<PIN_MOTORMINUS);
+				//_delay_ms(100);
+				stopMotor();
 				//Carefully open a little
 				for (uint8_t duty = 20; duty <= 40; duty++) {
 					for (uint8_t i = 0; i < 120 ; i++) {
@@ -146,8 +204,10 @@ void openValve(){
 				motState = OPEN;
 				break;
 			}
+			*/
 			
 			timeCounter++;
+			
 
 		}
 
@@ -221,7 +281,7 @@ valveError closeValveAttempt(){
 		while(motState == CLOSING && timeCounter <= CLOSE_TIMEOUT){	//Was at 1400
 
 			
-			prepareReadingCurrent(SAMPLE_ACCUM_CLOSE);
+			prepareReadingCurrent(SAMPLE_ACCUM_CLOSE, ADC_PRESC_DIV4_gc);
 			currentADC = ADC_0_readCurrent(SAMPLE_ACCUM_CLOSE);
 			//calc_curr  = (currentADC * MAX_CUR) / RES_10BIT;
 			voltageADC = ADC_0_readBatteryVoltage();

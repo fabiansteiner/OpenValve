@@ -48,7 +48,7 @@ uint16_t ADC_0_readSoilMoisture();
 
 uint16_t ADC_0_readBatteryVoltage();
 
-void prepareReadingCurrent(uint8_t shiftRight);
+void prepareReadingCurrent(uint8_t shiftRight, uint8_t prescaler);
 
 uint16_t ADC_0_readCurrent(uint8_t shiftRight);
 

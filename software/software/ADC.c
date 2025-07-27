@@ -50,10 +50,10 @@ uint16_t ADC_0_readBatteryVoltage(){
 	
 }
 
-void prepareReadingCurrent(uint8_t shiftRight){
+void prepareReadingCurrent(uint8_t shiftRight, uint8_t prescaler){
 	ADC0.SAMPCTRL = 0;
 
-	ADC0.CTRLC = ADC_PRESC_DIV4_gc								//CLK_PER divided by 16
+	ADC0.CTRLC = prescaler								//CLK_PER divided by 16		
 	| ADC_REFSEL_VDDREF_gc;										//VDD as reference
 	ADC0.CTRLB = shiftRight;
 	ADC0.CTRLA |= 1 << ADC_ENABLE_bp;							//Enable ADC
