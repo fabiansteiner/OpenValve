@@ -382,12 +382,59 @@ void setValveError(valveError err){
 	error = err;
 }
 
+void motorPositioningMode(){
+	//Init Motor
+	PORTB_DIRSET = (1<<PIN_MOTORPLUS);
+	PORTA_DIRSET = (1<<PIN_MOTORMINUS);
+	PORTA_DIRSET = (1<<PIN_SOILSENSORON);
+	PORTA_OUTSET = (1<<PIN_SOILSENSORON);
+	_delay_ms(1000);														//Let the pull-up take effect	
+	uint16_t driveCounter = 0;
+	
+	while(1){
+
+		//Check if buttons are being pressed
+		if((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
+			_delay_ms(10);
+			while((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0 && driveCounter <= 25000){
+				software_pwm_motorPlus(25, 15);
+				driveCounter++;
+			}
+			driveCounter = 0;
+			stopMotor();
+			while((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
+				_delay_ms(5);
+			}
+		}
+		
+		if((PORTA_IN & (1<<PIN_MOTORSTOP))!=0){
+			_delay_ms(10);
+			while((PORTA_IN & (1<<PIN_MOTORSTOP))!=0 && driveCounter <= 25000){
+				//PORTA_OUTSET = (1<<PIN_MOTORMINUS);
+				software_pwm_motorMinus(25, 15);
+				driveCounter++;
+			}
+			driveCounter = 0;
+			stopMotor();
+			while((PORTA_IN & (1<<PIN_MOTORSTOP))!=0){
+				_delay_ms(5);
+			}
+		}
+
+		_delay_ms(10);
+		
+
+		
+
+	}
+	
+}
+
 
 ISR(PORTA_PORT_vect)
 {
 	if(PA5_INTERRUPT && motState == CLOSING)
 	{
-		//dynamic_delay(map(calc_volt, MIN_VOL, MAX_VOL, MAX_MOTOR_CLOSE_DELAY, MAX_MOTOR_CLOSE_DELAY/5));	//Result=43 @ 5.0V
 		stopMotor();
 		motState = CLOSED;
 		

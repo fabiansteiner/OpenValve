@@ -172,19 +172,33 @@ void switchOFF(){
 
 int main(void)
 {
+
 	sei();
+	initLEDs();
+
+	//if UI button is being pressed on power up enter motor positioning mode
+	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
+		_delay_ms(5);								// Debouncing
+		animateMotorPositioningState();
+		while((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0);	// Wait for button release
+		motorPositioningMode();
+	}
+
+	
 	
 	initSleep();
-	initLEDs();
 	//uart_init(9600);
 	initUI();
 	initADC();
 	initializeValve();
 	changePITInterval();
+
 	
 	_delay_ms(100);			//Let setting settle in
 	uint16_t SM;
 	uint8_t motorStateChanged = 0;
+
+	
 	
 	sleep_mode();
 	

@@ -240,6 +240,10 @@ ISR(TCA0_OVF_vect)
 				animationCounter = 0;
 			}
 		}
+	}else if(ongoingAnimation == A_MOTORPOSITIONING){
+		PORTA.OUTTGL = (1<<PIN_REDLED);
+		PORTB.OUTTGL = (1<<PIN_GREENLED);
+		PORTB.OUTTGL = (1<<BLUE_LED);
 	}
 
 
@@ -399,6 +403,16 @@ void animateSoilMoisture(){
 	
 	//Blink as many times as the currentSoilMoistureLevel
 	resetTimerSettings();
+	TCA0.SINGLE.PER = 3000;
+	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+}
+
+void animateMotorPositioningState(){
+	ongoingAnimation = A_MOTORPOSITIONING;
+	
+	//Blink as many times as the currentSoilMoistureLevel
+	resetTimerSettings();
+	//PORTB.OUTTGL = (1<<PIN_GREENLED);
 	TCA0.SINGLE.PER = 3000;
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 }

@@ -64,6 +64,8 @@ valveState getValveState();
 valveError getValveError();
 void setValveError(valveError err);
 
+void motorPositioningMode();
+
 
 
 #endif /* VALVE_H_ */
