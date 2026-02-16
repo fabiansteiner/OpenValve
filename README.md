@@ -22,7 +22,7 @@ OpenValve is an open-source **irrigation and liquid-control valve**, built aroun
 - provides a straight **8 mm inner flow path** (Cv ≈ 2)  
 - handles pressures up to **2 bar** (0–30 psi)  
 
-![Open Valve First Impressions](documents/pics/pinchValve.gif )
+![Open Valve First Impressions](documents/pics/PinchValve.gif)
 
 ## 🌧️ Sensor-Based Irrigation
 OpenValve waters plants only when they need it - not on a schedule - by the help of a **soil moisture sensor**. 
