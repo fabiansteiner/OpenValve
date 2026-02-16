@@ -1,0 +1,226 @@
+(footprint "SOT-23_Handsoldering_ZXCT1009F"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "SOT-23, Handsoldering")
+	(tags "SOT-23")
+	(property "Reference" "REF**"
+		(at 0 -2.5 0)
+		(layer "F.SilkS")
+		(uuid "3ea50163-c677-457b-83bc-3d69196dd76f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "SOT-23_Handsoldering_ZXCT1009F"
+		(at 0 2.5 0)
+		(layer "F.Fab")
+		(uuid "7671ba56-465b-46d0-aee7-19a0b06b039c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "cdcc76fd-a3e1-401e-af1a-1621d817fcec")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "371ad6c1-f874-4998-a42b-47cd7816495b")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start 0.76 -1.58)
+		(end -2.4 -1.58)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "29eccf69-f8fd-48cb-9adc-dcb80543625a")
+	)
+	(fp_line
+		(start 0.76 -1.58)
+		(end 0.76 -0.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "55009c18-f72d-4f1a-b414-0341d3d57bb6")
+	)
+	(fp_line
+		(start 0.76 1.58)
+		(end -0.7 1.58)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "1c9a8955-5336-4faf-8b83-37870480823f")
+	)
+	(fp_line
+		(start 0.76 1.58)
+		(end 0.76 0.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f1ca2bd9-6430-4216-9654-26b7d768d780")
+	)
+	(fp_line
+		(start -2.7 -1.75)
+		(end 2.7 -1.75)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "29ef871a-2bc1-40e7-8e53-ffd4e9a875dd")
+	)
+	(fp_line
+		(start -2.7 1.75)
+		(end -2.7 -1.75)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "acd239f9-cba1-40e2-b102-866690321a96")
+	)
+	(fp_line
+		(start 2.7 -1.75)
+		(end 2.7 1.75)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "a50294d6-baf8-4ffd-b7e5-b89357d8010f")
+	)
+	(fp_line
+		(start 2.7 1.75)
+		(end -2.7 1.75)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "0f408be8-9bf5-4d91-927d-2255947d4a03")
+	)
+	(fp_line
+		(start -0.7 -0.95)
+		(end -0.7 1.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ae8e2462-e42e-48b7-869a-0e56f3834386")
+	)
+	(fp_line
+		(start -0.7 -0.95)
+		(end -0.15 -1.52)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "115d91c5-b683-4fc3-a7b2-24e595a6ad56")
+	)
+	(fp_line
+		(start -0.7 1.52)
+		(end 0.7 1.52)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "3be01e04-7bd4-4391-ac2e-cf4ecf0efaeb")
+	)
+	(fp_line
+		(start -0.15 -1.52)
+		(end 0.7 -1.52)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "72e39b52-32f1-4881-aa9e-88f7b60e9ed9")
+	)
+	(fp_line
+		(start 0.7 -1.52)
+		(end 0.7 1.52)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "82fb5757-f348-41da-b7e3-8030a1d42791")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 90)
+		(layer "F.Fab")
+		(uuid "47c8e42c-a964-4465-9412-a3f45a2b4301")
+		(effects
+			(font
+				(size 0.5 0.5)
+				(thickness 0.075)
+			)
+		)
+	)
+	(pad "1" smd rect
+		(at 1.5 0)
+		(size 1.9 0.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "1add32b0-ca4e-4e7e-8643-675c5838fa79")
+	)
+	(pad "2" smd rect
+		(at -1.5 0.95)
+		(size 1.9 0.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "c81a3736-fab1-4e8a-b8c6-ddb1b23b3d1f")
+	)
+	(pad "3" smd rect
+		(at -1.5 -0.95)
+		(size 1.9 0.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "9fb81df6-6e76-4fe7-931f-d30b88f7c7d8")
+	)
+	(embedded_fonts no)
+	(model "${KISYS3DMOD}/Package_TO_SOT_SMD.3dshapes/SOT-23.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

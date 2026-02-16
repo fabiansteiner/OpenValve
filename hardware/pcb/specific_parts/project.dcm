@@ -1,0 +1,21 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AH9246
+D Hall Sensor, Package: TO92S
+F https://www.diodes.com/assets/Datasheets/AH9246.pdf
+$ENDCMP
+#
+$CMP AP7370-33Y-13
+F https://www.diodes.com/assets/Datasheets/AP7370.pdf
+$ENDCMP
+#
+$CMP MP6513GJ
+F https://www.monolithicpower.com/en/documentview/productdocument/index/version/2/document_type/Datasheet/lang/en/sku/MP6513/document_id/169
+$ENDCMP
+#
+$CMP XLUGR34M
+D Red-Green LED with common Cathode
+F https://www.sunledusa.com/products/spec/XLUGR34M.pdf
+$ENDCMP
+#
+#End Doc Library
