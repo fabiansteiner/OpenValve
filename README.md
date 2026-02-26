@@ -1,6 +1,6 @@
 # 🌱 OpenValve - The 3D-Printable Irrigation Valve
 
-[(Soon) Get OpenValve]() | [Build OpenValve](documents/Construction.md) | [Join Discord](https://discord.gg/JMEDK97xuT)
+[(Soon) Get OpenValve]() | [Build OpenValve](documents/Construction.md) | [Getting Started](documents/GettingStarted.md) | [Join Discord](https://discord.gg/JMEDK97xuT)
 
 ----
 

@@ -13,6 +13,8 @@ Functionality and long-term reliability is achieved only when all components are
 - Fiberlogy ASA
 - Prusament ASA
 
+!!! Do not use dark filament colors if you intend to use OpenValve outdoors and under direct sunlight. !!!
+
 **Global Print Settings for ALL ASA parts**
 - **Layer height:** 0.2 mm
 - **Perimeters:** 4
