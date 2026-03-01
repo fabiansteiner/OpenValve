@@ -2,8 +2,8 @@
 
 OpenValve is an open hardware project intended for makers, developers and research purposes. It is not available as a ready-to-use consumer product and must be assembled and partly printed.
 
-### To build your own you will need:
-- the assembly kit + soil moisture sensor (soon available on lectronz )
+### To build your own you need:
+- the assembly kit + soil moisture sensor (soon available on lectronz)
 - an enclosed 3D printer (capable of printing ASA without warping) + ASA filament
 - 1 x 9V Alkaline Battery
 - solder equipment
@@ -13,4 +13,4 @@ OpenValve is an open hardware project intended for makers, developers and resear
 
 <br>
 
-In the soon coming [Assembly Guide Video]() the whole assembly process is shown in detail.
+In the [Assembly Guide Video](https://youtu.be/P1zOn2ZRUbA) the whole assembly process is shown in detail.
