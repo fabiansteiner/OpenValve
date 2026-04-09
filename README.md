@@ -1,6 +1,6 @@
 # 🌱 OpenValve - The 3D-Printable Irrigation Valve
 
-[(Soon) Get OpenValve]() | [Build OpenValve](documents/Construction.md) | [Getting Started](documents/GettingStarted.md) | [Join Discord](https://discord.gg/JMEDK97xuT)
+[Get OpenValve](#availability) | [Build OpenValve](documents/Construction.md) | [Getting Started](documents/GettingStarted.md) | [Join Discord](https://discord.gg/JMEDK97xuT)
 
 ----
 
@@ -102,26 +102,34 @@ To make this easy to understand, every UI state is documented and can be explore
 This web-based “digital twin” mimics the behaviour of the real device - showing the same LED patterns and button interactions, along with explanations for each state.  
 It’s the easiest way to learn how OpenValve thinks and operates.
 
-
-
-
 ---
+# Availability
 
+### Can I get an OpenValve already?
 
+**Not yet.**  
+OpenValve is currently still in the prototype stage and is **not yet available as a finished product**.
 
+### Why is it not available yet?
 
+Turning OpenValve from a working prototype into a real product requires additional steps such as:
 
+- certification / compliance
+- small-batch production setup
+- packaging and logistics
+- support infrastructure
 
-# ⚠️ Prototype Status & Disclaimer
+These steps come with significant cost and effort.
 
-Right now OpenValve is a **prototype** intended for educational, experimental, and development use.
+### I want one — what should I do?
 
-It is **not** a consumer product.
+If you’d like to get an OpenValve for yourself once it becomes available, you can join the waitlist here:
 
-By using any files from this repository, you acknowledge that:
-- No warranty or guarantee is provided  
-- All assembly and use is at your own risk  
-- You are responsible for ensuring safe operation  
+**[Join the OpenValve waitlist](https://open-valve.com/)**
+
+### What is the waitlist for?
+
+The waitlist helps me measure real demand and decide whether it makes sense to invest in the next steps needed to turn OpenValve into a product. If you join the waitlist, you’ll also be among the first to hear about updates on availability.
 
 
 
