@@ -435,6 +435,7 @@ ISR(PORTA_PORT_vect)
 {
 	if(PA5_INTERRUPT && motState == CLOSING)
 	{
+		//_delay_ms(48);
 		stopMotor();
 		motState = CLOSED;
 		

@@ -4,7 +4,7 @@
  * Created: 02.11.2022 16:18:04
  *  Author: SteinerF
  *
- *	This file included the functions necessary to interface with the user. (Magnetic Switch, LEDs)
+ *	This file included the functions necessary to interface with the user. (Button, LEDs)
  */ 
 
 
@@ -28,12 +28,6 @@ typedef enum {
 	SHOWNOTHING = 8,
 	ERRORSTATE}  UIstate;
 	
-typedef enum {
-	SEC4 = 5,
-	SEC16 = 4,
-	MIN1 = 3,
-	MIN5 = 2,
-	MIN60 = 1}  wakeUpMultiplicator;
 	
 typedef struct{
 	uint16_t tresholdOpen;

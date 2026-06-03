@@ -268,10 +268,9 @@ int main(void)
 								motorStateChanged = 1;
 								irrigationTimeCounter = 0;
 								executeMultiplicator = 0;
-							}else{
+							}else{ //Calculate irrigation time 
 								
 								uint16_t newIrrigationTimeCounter = irrigationTimeCounter * (0.5f * (getCurrentMultiplicator()-1));
-								
 								
 								if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){ //If irrigation time already bigger than 2 hours then just close
 									//This case is now handled in later logic, where error is thrown for wrong sensor placement

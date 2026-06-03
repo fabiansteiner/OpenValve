@@ -38,9 +38,9 @@
 		return adc_trehsolds[sensorLevel]; 
 	}
 
-	static uint8_t calculateCurrentSoilMoistureLevel(uint16_t soilMoistureADC){
+	static uint8_t calculateCurrentSoilMoistureLevel(uint16_t soilMoistureADC, uint8_t valveOpen){
 		for(uint8_t i = 0; i< 8; i++){
-			if(soilMoistureADC < adc_trehsolds[i]){
+			if(soilMoistureADC < adc_trehsolds[i] + valveOpen * 25){
 				return i+1;
 			}
 		}

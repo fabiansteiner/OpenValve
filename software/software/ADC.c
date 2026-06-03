@@ -101,9 +101,13 @@ uint16_t ADC_0_readSoilMoisture(){
 	while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));					//Wait until conversion is done
 	adc_result_soil = read_adc_sample_accumulator(ADC_SAMPNUM_ACC64_gc);									//Read Result
 	ADC0.INTFLAGS = ADC_RESRDY_bm;								//Clear interrupt bit
-		
-	currentSoilMoistureLevel = calculateCurrentSoilMoistureLevel(adc_result_soil);
 	
+	//Because thresholds are different when valve is open vs. closed (otherwise when valve is open, LED blinks could show that it is already ahead ie. 5 blinks, but valve still does not close cause closing threshold is opening threshold + 25)
+	if(getValveState() == OPEN)
+		currentSoilMoistureLevel = calculateCurrentSoilMoistureLevel(adc_result_soil, 1);
+	else
+		currentSoilMoistureLevel = calculateCurrentSoilMoistureLevel(adc_result_soil, 0);
+
 	return adc_result_soil;
 	
 }

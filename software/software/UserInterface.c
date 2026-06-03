@@ -27,7 +27,6 @@ uint16_t milliSecondCounter = 0;
 
 
 void changeThresholds(){
-	// Magic number 102 because ADC returns value between 0 and 1023, we have 8 configurable threshold levels and 2 two upper levels are reserved to give the sensor a chance to detect when sensor is wet at the upper levels. 1023/10 = ~102
 	// Closing threshold has to be higher because if ADC delivers exactly a value on the borderline its likely that the valve cant decide if it should be open or closed.
 	
 	currentThresholds.tresholdOpen = getSensorTreshold(soilLevel-1);
