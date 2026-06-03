@@ -153,6 +153,7 @@ void changePITInterval(){
 
 	}else if(getValveState() == CLOSED){
 		//changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
+		//changePIT(RTC_PRESCALER_DIV4096_gc, 3); //every 8 seconds
 		changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
 	
 	}
@@ -206,12 +207,11 @@ int main(void)
     {
 		if (mState == ACTIVE || mState == PERIODICWAKEUP){
 			
-			//When valve open, set blue led
+			//set blue led if valve is open
 			if(manualIrrigation == 0){
 				if(getValveState() == OPEN) PORTB_OUTSET = (1<<BLUE_LED);
 				else PORTB_OUTCLR = (1<<BLUE_LED);
 			}
-			
 			
 			if(getValveError()==NO_ERROR){
 
@@ -247,12 +247,24 @@ int main(void)
 						miliSecCounter=0;
 					}
 				
-					
-				
 					if(changeOfState == UI_SHUTDOWN){switchOFF(); continue;}
+
+				}else if(mState == PERIODICWAKEUP){
+					if(getValveState() == CLOSED){
+						//Get new battery measurment and set warning state if too low
+						if(getBatteryLevel3Indications() == 1)
+							warningState = WARNING;
+						else
+							warningState = NO_WARNING;
+						//If warning is present turn on warning sign at periodic wakeup when valve is closed
+						if(warningState == WARNING && getValveState() == CLOSED){
+							PORTA.OUTSET = (1<<PIN_REDLED);
+							PORTB.OUTSET = (1<<PIN_GREENLED);
+						}
+					}
+					
 				}
 
-			
 				//If manual irrigation off = normal operation = Take Soil Moisuture Measurement and Open/Close
 				if(manualIrrigation == 0 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY/2);
@@ -260,6 +272,12 @@ int main(void)
 					_delay_ms(MAINLOOP_DELAY/2);
 					SM = ADC_0_readSoilMoisture();
 					PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
+
+					//turn off warning sign when periodic wakeup and there is a warning present
+					if(mState == PERIODICWAKEUP && warningState == WARNING){
+						PORTA.OUTCLR = (1<<PIN_REDLED);
+						PORTB.OUTCLR = (1<<PIN_GREENLED);
+					}
 				
 					if(SM >= getCurrentThresholds().thresholdClose){
 						if(getValveState() == OPEN){
@@ -328,6 +346,7 @@ int main(void)
 					}
 					
 				}
+
 
 				//If error occured after driving the motor, change to error state
 				if(getValveError() != NO_ERROR){
@@ -427,6 +446,18 @@ int main(void)
 				}
 			}
 		}else if(mState == SLEEP){
+			//Valve does not wake up, but shows warnings
+			if(warningState == WARNING){
+				if(getValveState() == CLOSED){
+					PORTA.OUTSET = (1<<PIN_REDLED);
+					PORTB.OUTSET = (1<<PIN_GREENLED);
+					_delay_ms(MAINLOOP_DELAY);
+					PORTA.OUTCLR = (1<<PIN_REDLED);
+					PORTB.OUTCLR = (1<<PIN_GREENLED);
+				}
+			}
+			
+				
 			sleep_mode();
 		}else if(mState == OFF){
 			

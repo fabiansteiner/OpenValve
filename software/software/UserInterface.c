@@ -15,6 +15,7 @@
 #include "EEPROM.h"
 
 UIstate uiState = SHOWNOTHING;
+warnings warningState = WARNING;
 
 
 uint8_t soilLevel = 4;
@@ -71,6 +72,7 @@ void initUI(){
 	
 
 	changeThresholds();
+
 }
 
 void increaseThreshold(){

@@ -59,10 +59,13 @@ FROM_SHOW_ERROR_TO_SHOWBATTERY
 
 } state_change;
 
+typedef enum {NO_WARNING = 0, WARNING = 1}  warnings;
+
 
 extern UIstate uiState;
 extern uint8_t soilLevel;
 extern uint8_t multiplicator;
+extern warnings warningState;
 	
 void initUI();
 
