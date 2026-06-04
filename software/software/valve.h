@@ -30,13 +30,18 @@
 #define PIN_MOTORSTOP 5		//PORTA
 
 #define MAX_VOL 9.9
-#define MIN_VOL 4.0
-#define MIN_VOL_BEFORE_DRIVE 7.0
+#define MIN_VOL_DRIVE 4.0
+#define MIN_VOL_DRIVE_BEFORE_WARNING 4.3
+#define MIN_VOL_BEFORE_DRIVE 7.0	//Prod
+//#define MIN_VOL_BEFORE_DRIVE 4.0	//Testing
 #define MAX_CUR 1.0			//Bei 0.2 Ohm Shunt
+
+#define DRIVE_VOLTAGE_LOW_TRIGGER 5
 
 #define OPEN_CURRENT_LIMIT_ADC (uint16_t)(RES_10BIT / MAX_CUR * OPEN_CURRENT)
 #define CLOSE_CURRENT_LIMIT_ADC (uint16_t)(RES_10BIT / MAX_CUR * CLOSE_CURRENT)
-#define MIN_VOLT_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL)
+#define MIN_VOLT_DRIVE_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL_DRIVE)
+#define MIN_VOLT_DRIVE_BEFORE_WARNING_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL_DRIVE_BEFORE_WARNING)
 #define MIN_VOLT_BEFORE_DRIVE_ADC (uint16_t)(RES_10BIT / MAX_VOL * MIN_VOL_BEFORE_DRIVE)
 
 typedef enum {UNDEFINED=1, OPEN=2, CLOSED=5, OPENING = 20, CLOSING = 40}  valveState;
@@ -65,6 +70,8 @@ valveError getValveError();
 void setValveError(valveError err);
 
 void motorPositioningMode();
+
+uint8_t getDriveVoltageLowCount();
 
 
 

@@ -176,13 +176,13 @@ ISR(TCA0_OVF_vect)
 		if (animationCounter < 1){
 			PORTA.OUTSET = (1<<PIN_REDLED); 
 			animationCounter++;
-		}else if (animationCounter >=1 && animationCounter<2){
+		}else if (animationCounter<2){
 			PORTB.OUTSET = (1<<PIN_GREENLED);
 			animationCounter++;
-		}else if (animationCounter >=2 && animationCounter<3){
+		}else if (animationCounter<3){
 			PORTA.OUTCLR = (1<<PIN_REDLED); 
 			animationCounter++;
-		}else if (animationCounter >=3 && animationCounter<4){
+		}else if (animationCounter<4){
 			if(batteryLevel == 3){
 				//Turn off counter
 				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
@@ -190,15 +190,25 @@ ISR(TCA0_OVF_vect)
 				PORTA.OUTSET = (1<<PIN_REDLED); 
 				animationCounter++;
 			}
-		}else if (animationCounter >=4 && animationCounter<5){
+		}else if (animationCounter<5){
 			if(batteryLevel == 2){
 				//Turn off counter
 				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
 			}else{
 				PORTB.OUTCLR = (1<<PIN_GREENLED);
-				TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+				if (batteryLevel == 1){
+					TCA0.SINGLE.CTRLA &= ~TCA_SINGLE_OVF_bm;
+				}else{
+					TCA0.SINGLE.CNT = 0;
+					TCA0.SINGLE.PER = 4000;
+					animationCounter++;
+				}
+				
 			}
+		}else if (animationCounter<6){
+			PORTA.OUTTGL = (1<<PIN_REDLED); 
 		}
+	
 	}else if(ongoingAnimation == A_SELECTTHRESHOLD){
 		PORTB.OUTTGL = (1<<PIN_GREENLED);
 	}else if(ongoingAnimation == A_SELECTMULTIPLICATOR){
@@ -296,15 +306,15 @@ void changeLEDAnimation(state_change change){
 	
 	
 	switch(change){
-		case UI_STARTUP: /*animateVersionNumber();*/ batteryLevel = getBatteryLevel3Indications(); func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
+		case UI_STARTUP: /*animateVersionNumber();*/ batteryLevel = getBatteryLevel4Indications(); func_ptr = &animateBatteryLevel; animateTransition(LED_STARTUP);	//Transition
 		break;
-		case FROM_SHOWNOTHING_TO_SHOWBATTERY: batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
+		case FROM_SHOWNOTHING_TO_SHOWBATTERY: batteryLevel = getBatteryLevel4Indications(); animateBatteryLevel();
 		break;
 		case FROM_SHOWBATTERY_TO_SELECTTHRESHOLD: func_ptr = &animateSelectThreshold;				animateTransition(LED_CONFIRM);	//Transition
 		break;
 		case FROM_SHOWBATTERY_TO_SHOWSOILMOISTURE: animateSoilMoisture();
 		break;
-		case FROM_SHOWSOILMOISTURE_TO_SHOWBATTERY:  batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
+		case FROM_SHOWSOILMOISTURE_TO_SHOWBATTERY:  batteryLevel = getBatteryLevel4Indications(); animateBatteryLevel();
 		break;
 		case FROM_SHOWSOILMOISTURE_TO_MANUALIRRIGATION: animateManualIrrigation();
 		break;
@@ -330,7 +340,7 @@ void changeLEDAnimation(state_change change){
 		break;
 		case SHOW_ERROR: animateValveErrors();
 		break;
-		case FROM_SHOW_ERROR_TO_SHOWBATTERY: batteryLevel = getBatteryLevel3Indications(); animateBatteryLevel();
+		case FROM_SHOW_ERROR_TO_SHOWBATTERY: batteryLevel = getBatteryLevel4Indications(); animateBatteryLevel();
 		break;
 		default:
 		break;
@@ -389,6 +399,7 @@ void animateBatteryLevel(){
 	
 	ongoingAnimation = A_BATTERY;
 
+	//Crazy animation with smooth transition
 	/*
 	//Set overflow interval to 50khz for smooth transition and many different levels
 	resetTimerSettings();
@@ -396,7 +407,7 @@ void animateBatteryLevel(){
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
 	*/
 
-	//Slow animation with only 3 battery indications
+	//Slow animation with only 4 battery indications
 	resetTimerSettings();
 	TCA0.SINGLE.CNT = 9000;
 	TCA0.SINGLE.PER = 10000;

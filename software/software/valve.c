@@ -33,13 +33,8 @@ int16_t deltaCurrent;
 uint8_t trigger_count = 0;
 
 volatile float calc_volt = 5.0;
-float calc_curr;
-float calc_watt;
-float short_voltage;
-float short_current;
-float calc_resistance;
-float short_resistance;
 uint16_t timeCounter = 0;
+uint8_t driveVoltageLowCount = 0;
 
 
 void initializeValve(){
@@ -244,6 +239,7 @@ valveError closeValveAttempt(){
 
 		timeCounter = 0;
 		uint8_t triggerBatteryLow = 0;
+		uint8_t triggerBatteryLowWarning = 0;
 		valveError intermediateError = NO_ERROR;
 
 		
@@ -287,8 +283,12 @@ valveError closeValveAttempt(){
 			voltageADC = ADC_0_readBatteryVoltage();
 			//calc_volt  = (voltageADC * MAX_VOL) / RES_10BIT;
 
-			if(voltageADC <= MIN_VOLT_ADC)
-				triggerBatteryLow = 1;
+			if(voltageADC <= MIN_VOLT_DRIVE_BEFORE_WARNING_ADC){
+				triggerBatteryLowWarning=1;
+				if(voltageADC <= MIN_VOLT_DRIVE_ADC)
+					triggerBatteryLow = 1;
+			}
+			
 			
 
 			if(currentADC > CLOSE_CURRENT_LIMIT_ADC){
@@ -309,6 +309,18 @@ valveError closeValveAttempt(){
 			intermediateError = VALVE_TIMEOUT;
 			
 		}
+
+		//If the lowest drive voltage hits below 4.3 multiple times in a row, then it gets stuck at DRIVE_VOLTAGE_LOW_TRIGGER (=5), which indicates the battery is getting too weak
+		if(triggerBatteryLowWarning){
+			if(driveVoltageLowCount < DRIVE_VOLTAGE_LOW_TRIGGER+1)
+				driveVoltageLowCount++;
+		}else{
+			if(driveVoltageLowCount > 0){
+				driveVoltageLowCount--;
+			}
+		}
+
+			
 
 		
 		if(triggerBatteryLow){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
@@ -382,6 +394,10 @@ valveError getValveError(){
 
 void setValveError(valveError err){
 	error = err;
+}
+
+uint8_t getDriveVoltageLowCount(){
+	return driveVoltageLowCount;
 }
 
 void motorPositioningMode(){

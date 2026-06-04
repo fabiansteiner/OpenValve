@@ -153,16 +153,24 @@ uint8_t getBatteryLevel(){
 	
 }
 */
-uint8_t getBatteryLevel3Indications(){
+uint8_t getBatteryLevel4Indications(){
+
+	//If voltage already got below 4.3V multiple times when driving the motor, there is no need for a further measurement. The battery can´t handle the motor current in its environment and must be changed.
+	if(getDriveVoltageLowCount() >= DRIVE_VOLTAGE_LOW_TRIGGER){
+		return 0;
+	}
+
 	uint16_t adcVoltage = ADC_0_readBatteryVoltage();
 	
 	//Convert adc value to battery level 1-3
 	//Battery is on a voltage divider which divides voltage by 3. So if Battery is 9.9V, ADC will read 3.3V
 	//Assumption: Battery is LOW if <8.0V, moderate if between 8.0V and 8.5V and full if >8.5V
 	//Map ADC Values to battery level
-	if(adcVoltage < BATTERY_LEVEL_LOW_ADC){
+	if(adcVoltage < BATTERY_LEVEL_VERYLOW_ADC){
+		return 0;
+	}else if(adcVoltage < BATTERY_LEVEL_LOW_ADC){
 		return 1;
-	}else if (adcVoltage >= BATTERY_LEVEL_LOW_ADC && adcVoltage <= BATTERY_LEVEL_MEDIUM_ADC){
+	}else if (adcVoltage <= BATTERY_LEVEL_MEDIUM_ADC){
 		return 2;
 	}else{
 		return 3;

@@ -153,9 +153,8 @@ void changePITInterval(){
 
 
 	}else if(getValveState() == CLOSED){
-		//changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
-		//changePIT(RTC_PRESCALER_DIV1024_gc, 3); //every 8 seconds
-		changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
+		//changePIT(RTC_PRESCALER_DIV1024_gc, 8); //shorter timespan for debugging
+		changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min prod
 	
 	}
 	
@@ -231,6 +230,13 @@ int main(void)
 			if(getValveError()==NO_ERROR){
 
 			
+				//Get new battery measurment and set warning state if too low
+				if(valveCylces >= 1450 || getDriveVoltageLowCount() >= DRIVE_VOLTAGE_LOW_TRIGGER || ADC_0_readBatteryVoltage() <= BATTERY_LEVEL_VERYLOW_ADC)
+					warningState = WARNING;
+				else
+					warningState = NO_WARNING;
+
+			
 				if(mState == ACTIVE){
 				
 					pressType button_press = NONE;
@@ -266,11 +272,6 @@ int main(void)
 
 				}else if(mState == PERIODICWAKEUP){
 					if(getValveState() == CLOSED){
-						//Get new battery measurment and set warning state if too low
-						if(ADC_0_readBatteryVoltage() <= BATTERY_LEVEL_VERYLOW_ADC || valveCylces >= 1450)
-							warningState = WARNING;
-						else
-							warningState = NO_WARNING;
 						//If warning is present turn on warning sign at periodic wakeup when valve is closed
 						if(warningState == WARNING && getValveState() == CLOSED){
 							PORTA.OUTSET = (1<<PIN_REDLED);

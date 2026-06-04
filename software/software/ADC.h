@@ -55,8 +55,8 @@ uint16_t ADC_0_readCurrent(uint8_t shiftRight);
 
 uint16_t getADCValue(uint8_t prescaler, uint8_t accumulation, uint8_t ADC_pin);
 
-uint8_t getBatteryLevel();
-uint8_t getBatteryLevel3Indications();
+//uint8_t getBatteryLevel();
+uint8_t getBatteryLevel4Indications();
 
 
 

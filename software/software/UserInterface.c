@@ -52,10 +52,10 @@ void changeThresholds(){
 void initUI(){
 	
 	//Check if its the very first startup
-	uint8_t readByte = FLASH_0_read_eeprom_byte(10);
+	uint8_t readByte = FLASH_0_read_eeprom_byte(9);
 	if(readByte != 221){
 		//If it is the very first startup, write magic number to magic position to indicate that this is not the first startup
-		FLASH_0_write_eeprom_byte(10, 221);
+		FLASH_0_write_eeprom_byte(9, 221);
 		//Also write standard values into eeprom
 		FLASH_0_write_eeprom_byte(0, soilLevel);
 		FLASH_0_write_eeprom_byte(1, multiplicator);
