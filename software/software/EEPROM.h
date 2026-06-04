@@ -11,15 +11,9 @@
 #ifndef EEPROM_H_
 #define EEPROM_H_
 
-/*
-void safeSoilLevel(uint8_t soilLevel);
-void safeMultiplicator(uint8_t multiplicator);
-
-uint8_t restoreSoilLevel();
-uint8_t restoreMultiplicator();
-*/
-
 #include "utils/compiler.h"
+
+#define CYCLE_START_ADDRESS 15
 
 #define BOOTLOADER_SECTION __attribute__((section(".bootloader")))
 
@@ -53,6 +47,10 @@ extern "C" {
 	uint8_t FLASH_0_read_eeprom_byte(eeprom_adr_t eeprom_adr);
 
 	nvmctrl_status_t FLASH_0_write_eeprom_byte(eeprom_adr_t eeprom_adr, uint8_t data);
+
+	uint16_t readValveCycles();
+
+	void writeValveCycles(uint16_t cylces);
 
 	
 

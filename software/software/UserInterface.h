@@ -65,6 +65,7 @@ typedef enum {NO_WARNING = 0, WARNING = 1}  warnings;
 extern UIstate uiState;
 extern uint8_t soilLevel;
 extern uint8_t multiplicator;
+extern uint16_t valveCylces;
 extern warnings warningState;
 	
 void initUI();
@@ -80,6 +81,8 @@ thresholds getCurrentThresholds();
 uint8_t getCurrentMultiplicator();
 
 UIstate getUIState();
+
+void incrementValveCycles();
 
 
 

@@ -15,11 +15,12 @@
 #include "EEPROM.h"
 
 UIstate uiState = SHOWNOTHING;
-warnings warningState = WARNING;
+warnings warningState = NO_WARNING;
 
 
 uint8_t soilLevel = 4;
 uint8_t multiplicator = 1;
+uint16_t valveCylces = 0;
 
 
 thresholds currentThresholds;
@@ -58,6 +59,12 @@ void initUI(){
 		//Also write standard values into eeprom
 		FLASH_0_write_eeprom_byte(0, soilLevel);
 		FLASH_0_write_eeprom_byte(1, multiplicator);
+
+		writeValveCycles(valveCylces);
+		
+		
+
+		
 	}else{
 		//If its is not the very first startup get settings from eeprom
 		readByte = FLASH_0_read_eeprom_byte(0);
@@ -68,11 +75,17 @@ void initUI(){
 		if(readByte <= 5){
 			multiplicator = readByte;
 		}
+		valveCylces = readValveCycles();
 	}
 	
 
 	changeThresholds();
 
+}
+
+void incrementValveCycles(){
+	valveCylces += 1;
+	writeValveCycles(valveCylces);
 }
 
 void increaseThreshold(){

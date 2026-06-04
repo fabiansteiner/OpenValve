@@ -67,3 +67,16 @@ nvmctrl_status_t FLASH_0_write_eeprom_byte(eeprom_adr_t eeprom_adr, uint8_t data
 	return NVM_OK;
 }
 
+uint16_t readValveCycles() {
+	uint16_t cycles = 0;
+
+	cycles = ((uint16_t)FLASH_0_read_eeprom_byte(CYCLE_START_ADDRESS)) << 8;
+	cycles |= FLASH_0_read_eeprom_byte(CYCLE_START_ADDRESS + 1);
+
+	return cycles;
+}
+
+void writeValveCycles(uint16_t cycles) {
+	FLASH_0_write_eeprom_byte(CYCLE_START_ADDRESS,     (uint8_t)((cycles >> 8) & 0xff));
+	FLASH_0_write_eeprom_byte(CYCLE_START_ADDRESS + 1, (uint8_t)(cycles & 0xff));
+}

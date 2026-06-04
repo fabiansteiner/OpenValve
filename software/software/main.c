@@ -11,6 +11,7 @@
 #include "common.h"
 #include "ADC.h"
 #include "LEDs.h"
+#include "EEPROM.h"
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <util/atomic.h>
@@ -153,7 +154,7 @@ void changePITInterval(){
 
 	}else if(getValveState() == CLOSED){
 		//changePIT(RTC_PRESCALER_DIV2048_gc, 1);	//for debugging 4 seconds
-		//changePIT(RTC_PRESCALER_DIV4096_gc, 3); //every 8 seconds
+		//changePIT(RTC_PRESCALER_DIV1024_gc, 3); //every 8 seconds
 		changePIT(RTC_PRESCALER_DIV16384_gc, 60); //30min
 	
 	}
@@ -180,9 +181,23 @@ int main(void)
 	//if UI button is being pressed on power up enter motor positioning mode
 	if((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
 		_delay_ms(5);								// Debouncing
-		animateMotorPositioningState();
-		while((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0);	// Wait for button release
-		motorPositioningMode();
+		directlyTriggerAnimation(A_MOTORPOSITIONING);
+		uint8_t pressCounter = 0;
+		while((PORTB_IN & (1<<PIN_MAGNETSWITCH))!=0){
+			_delay_ms(100);
+			pressCounter++;
+			if(pressCounter >= 100)
+				break;
+		}	// Wait for button release
+		if(pressCounter<100){
+			motorPositioningMode();
+		}else{
+			valveCylces = 0;
+			writeValveCycles(valveCylces);
+			directlyTriggerAnimation(A_TRANSITIONING_RESETCYCLES);
+			while(getLEDAnimation() == A_TRANSITIONING_RESETCYCLES);
+		}
+		
 	}
 
 	
@@ -252,7 +267,7 @@ int main(void)
 				}else if(mState == PERIODICWAKEUP){
 					if(getValveState() == CLOSED){
 						//Get new battery measurment and set warning state if too low
-						if(getBatteryLevel3Indications() == 1)
+						if(ADC_0_readBatteryVoltage() <= BATTERY_LEVEL_VERYLOW_ADC || valveCylces >= 1450)
 							warningState = WARNING;
 						else
 							warningState = NO_WARNING;

@@ -28,6 +28,7 @@
 #define INPUT_END 1023    // The largest number of the range input.
 #define OUTPUT_START 2 // The lowest number of the range output.
 #define OUTPUT_END 48  // The largest number of the range output.
+#define BATTERY_LEVEL_VERYLOW_ADC (uint16_t)(RES_10BIT / MAX_VOL * 7.5)
 #define BATTERY_LEVEL_LOW_ADC (uint16_t)(RES_10BIT / MAX_VOL * 8.0)
 #define BATTERY_LEVEL_MEDIUM_ADC (uint16_t)(RES_10BIT / MAX_VOL * 8.5)
 

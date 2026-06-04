@@ -130,14 +130,15 @@ ISR(TCA0_OVF_vect)
 			(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 		
-	}else if(ongoingAnimation == A_TRANSITIONING_SHUTDOWN){
+	}else if(ongoingAnimation == A_TRANSITIONING_SHUTDOWN || ongoingAnimation == A_TRANSITIONING_RESETCYCLES){
 		if (animationCounter < 2){
 				//Wait a little bit
 				animationCounter++;
 			}else if (animationCounter >=2 && animationCounter<8){
 				//Blink 3 times red 
 				PORTA.OUTTGL = (1<<PIN_REDLED);
-			
+				if(ongoingAnimation == A_TRANSITIONING_RESETCYCLES)	//if resetting cycles, also blink green LED to blink orange
+					PORTB.OUTTGL = (1<<PIN_GREENLED);
 				animationCounter++;
 			}else{
 				//Turn off counter
@@ -371,6 +372,10 @@ void animateTransition(uint8_t confirm){
 	}else if(confirm==LED_STARTUP){
 		ongoingAnimation = A_TRANSITIONING_STARTUP;
 		TCA0.SINGLE.PER = 4000;
+	}else if(confirm == LED_RESETCYCLECOUNTER){
+		PORTB.OUTCLR = (1<<BLUE_LED);
+		ongoingAnimation = A_TRANSITIONING_RESETCYCLES;
+		TCA0.SINGLE.PER = 8000;
 	}
 
 	
@@ -410,7 +415,6 @@ void animateSoilMoisture(){
 void animateMotorPositioningState(){
 	ongoingAnimation = A_MOTORPOSITIONING;
 	
-	//Blink as many times as the currentSoilMoistureLevel
 	resetTimerSettings();
 	//PORTB.OUTTGL = (1<<PIN_GREENLED);
 	TCA0.SINGLE.PER = 3000;
@@ -546,6 +550,15 @@ void animateChangeMultiplicator(){
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
 	*/
 	
+}
+
+void directlyTriggerAnimation(currentLEDAnimation chooseAnimation){
+	if(chooseAnimation == A_MOTORPOSITIONING){
+		animateMotorPositioningState();
+	}else if(chooseAnimation == A_TRANSITIONING_RESETCYCLES){
+		func_ptr = &stopLEDs;
+		animateTransition(LED_RESETCYCLECOUNTER);
+	}
 }
 
 void stopLEDs(){

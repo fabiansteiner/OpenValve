@@ -340,8 +340,10 @@ void closeValve(){
 		closeAttempts++;
 	}
 
-	if(error == NO_ERROR) //In case openValve throws a Timeout error already
+	if(error == NO_ERROR) //In case there was a valve timeout error when opening
 		error = closeError;
+
+	incrementValveCycles();
 
 	//Only in Dev Mode:
 	/*
