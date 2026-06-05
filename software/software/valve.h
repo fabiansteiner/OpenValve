@@ -12,18 +12,19 @@
 #ifndef VALVE_H_
 #define VALVE_H_
 
-//#define OPEN_CURRENT 0.45  //--> Motor got destroyed when opening really fast with the new pcb version where there is an additional 47uF cap
-//#define OPEN_CURRENT 0.32	// Tried for new PCB version with cap, but seems to be to low cause there are cases where it doesnt open completely (after the motor was resting without moving)
 #define OPEN_CURRENT 0.45
-#define CLOSE_CURRENT 0.80
+#define CLOSE_CURRENT 0.80 //prod
+//#define CLOSE_CURRENT 0.40 //test
 //#define SAMPLE_ACCUM ADC_SAMPNUM_ACC16_gc
 
 #define SAMPLE_ACCUM_OPEN ADC_SAMPNUM_ACC64_gc
 #define SAMPLE_ACCUM_CLOSE ADC_SAMPNUM_ACC64_gc
 
 
-#define OPEN_TIMEOUT 1000		//30000
-#define CLOSE_TIMEOUT 1000		//1000
+#define OPEN_TIMEOUT 1000		//Prod
+//#define OPEN_TIMEOUT 90		//Test
+#define CLOSE_TIMEOUT 1000		//Prod
+//#define CLOSE_TIMEOUT 200		//Test
 
 #define PIN_MOTORPLUS 1		//PORTB
 #define PIN_MOTORMINUS 6	//PORTA

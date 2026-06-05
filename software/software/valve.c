@@ -96,18 +96,20 @@ void software_pwm_motorMinus(uint16_t high_time, uint16_t low_time) {
 
 
 
-void openValve(){
+valveError openValveAttempt(){
 	if((motState == CLOSED || motState == UNDEFINED) && error == NO_ERROR){
 		
 		voltageADC = ADC_0_readBatteryVoltage();
 		
 		if(voltageADC <= MIN_VOLT_BEFORE_DRIVE_ADC && motState == CLOSED){
-			error = LOW_VOLTAGE;
+			//error = LOW_VOLTAGE;
 			//PORTB_OUTSET = (1<<BLUE_LED);
-			return;
+			return LOW_VOLTAGE;
 		}
 
 		PORTA_OUTSET = (1<<PIN_SOILSENSORON);
+
+		valveError intermediateError = NO_ERROR;
 		
 
 		//clearBuffer(&rb);
@@ -214,7 +216,7 @@ void openValve(){
 
 		if(timeCounter>=OPEN_TIMEOUT){
 			
-			error = VALVE_TIMEOUT;
+			intermediateError = VALVE_TIMEOUT;
 			//PORTA_OUTSET = (1<<PIN_REDLED);
 		}
 		
@@ -223,8 +225,14 @@ void openValve(){
 		//error = NO_ERROR;
 		PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off motor driver
 		_delay_ms(100);			//Let the motor calm down before driving it in the other direction
+
+		return intermediateError;
 	}
+
+	return NO_ERROR;
+	
 }
+
 
 
 	
@@ -323,7 +331,7 @@ valveError closeValveAttempt(){
 			
 
 		
-		if(triggerBatteryLow){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
+		if(triggerBatteryLow && intermediateError == NO_ERROR){	//Triggers at 4.05, without cap and increased adc samp time it triggers at 4.5
 			intermediateError = LOW_VOLTAGE;
 		}
 		
@@ -346,14 +354,14 @@ void closeValve(){
 
 	valveError closeError = closeValveAttempt();
 
-	while(closeError == HIGH_CURRENT && closeAttempts <= 3){
-		openValve();
+	//When motor brushes were not used for a long time, they may behave differently and draw more current, multiple attempts free the brushes
+	while((closeError == HIGH_CURRENT || closeError == VALVE_TIMEOUT) && closeAttempts < 3){
+		openValveAttempt();
 		closeError = closeValveAttempt();
 		closeAttempts++;
 	}
 
-	if(error == NO_ERROR) //In case there was a valve timeout error when opening
-		error = closeError;
+	error = closeError;
 
 	incrementValveCycles();
 
@@ -371,6 +379,18 @@ void closeValve(){
 	}
 	*/
 	
+}
+
+void openValve(){
+	valveError openError = openValveAttempt();
+
+	if(openError == LOW_VOLTAGE){error = LOW_VOLTAGE;}
+	else if(openError == VALVE_TIMEOUT){
+		//If there was a valve timeout when opening, there are very high chances that the motor gears are broken, in that case try and close the valve immediately before throwing the timeoutError
+		closeValve();
+		//Overwrite whatever error happend at the closing, the timeout error was first
+		error = VALVE_TIMEOUT;
+	}
 }
 
 void changeMotorState(){
