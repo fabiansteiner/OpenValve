@@ -1,10 +1,11 @@
-# 🌱 OpenValve - The 3D-Printable Irrigation Valve
+# OpenValve - An Open-Source Irrigation Controller and Pinch Valve Platform
 
-[Get OpenValve](#availability) | [Build OpenValve](documents/Construction.md) | [Getting Started](documents/GettingStarted.md) | [Join Discord](https://discord.gg/JMEDK97xuT)
+[Get OpenValve](#availability) | [Build OpenValve](documents/Construction.md) | [Documentation](https://docs.open-valve.com) | [Join Discord](https://discord.gg/JMEDK97xuT)
 
 ----
 
-OpenValve is an open-source **irrigation and liquid-control valve**, built around a custom pinch-valve mechanism and optimized entirely for 3D printing. It waters plants based on **actual soil moisture**, works with **gravity-fed systems**, and runs on a 9V battery for **about 3 months**.
+OpenValve is an **open-source, 3D-printable irrigation controller** with a custom pinch-valve mechanism at its core. It waters plants based on **actual soil moisture**, works with **gravity-fed systems**, and runs on a 9V battery for **about 3 months**. With different firmware or sensors, the same battery-powered pinch-valve platform can also be adapted for other projects.
+
 
 
 ![Open Valve First Impressions](documents/pics/OpenValveTeaser.gif)
@@ -16,7 +17,7 @@ OpenValve is an open-source **irrigation and liquid-control valve**, built aroun
 ## 🚰 3D-Printable Pinch Valve
 
 
-- works from **0 bar**, ideal for gravity-fed setups  
+- valve actuation works **down to 0 bar**, making it **perfect for gravity-fed setups**
 - requires **no minimum flow** and **no minimum pressure**  
 - tolerates **imperfect or particle-rich water**  
 - provides a straight **8 mm inner flow path** (Cv ≈ 2)  
@@ -25,69 +26,76 @@ OpenValve is an open-source **irrigation and liquid-control valve**, built aroun
 ![Open Valve First Impressions](documents/pics/PinchValve.gif)
 
 ## 🌧️ Sensor-Based Irrigation
-OpenValve waters plants only when they need it - not on a schedule - by the help of a **soil moisture sensor**. 
 
-### How it works
+OpenValve does not water on a fixed timer. Instead, it uses a soil moisture sensor to decide when watering is needed.
 
-OpenValve regularly takes measurements from the connected soil moisture sensor.
+The basic process is:
 
-When the soil gets dry (below a user-defined threshold):
+1. OpenValve regularly measures the soil moisture.
+2. If the soil is drier than the threshold you set, the valve opens.
+3. Water flows until the sensor detects that moisture is increasing.
+4. The valve then stays open a little longer, based on the extra watering time you set.
+5. The valve closes again.
 
-1. The valve opens automatically
-2. Water flows until measured soil moisture rises (+ user-defined extra time)
-3. The valve closes automatically  
+This allows the watering frequency to adapt to the actual conditions around the plant instead of following a fixed schedule:
+
+When the soil dries out faster, for example during hot weather or periods of increased plant demand, OpenValve waters more often. When the soil stays moist for longer, for example during cooler weather, after rainfall, or after a previous watering cycle, OpenValve waters less often.
+
+For a more detailed explanation of the watering logic, see the ["How OpenValve works" section in the documentation.](https://docs.open-valve.com/category/how-openvalve-works) 
 
 
-This cycle automatically adapts to plant demands and rainfall.  
 
-No timers.  No schedules.  
-Just plants getting exactly what they need.
+## 🔗 Standard Hose & Pipe Connections
 
-![How Open Valve operates](documents/pics/HowItWorksGif.gif)
+OpenValve has a standard **½″ male BSPP thread on both ends**. This thread size is common in irrigation and plumbing systems in Europe, the UK, Australia, and many other regions.
 
-## 🔗 Universal Hose & Pipe Compatibility
+With the right adapters, OpenValve can be connected to many different hose and pipe systems, for example:
 
-OpenValve uses a standard **½″ BSPP thread on both ends**, making it easy to integrate into a wide range of irrigation hardware:
+* compression fittings
+* hose connectors
+* thread adapters, such as **½″ to ¾″**
+* quick-connect fittings
+* different hose sizes
 
-- garden hoses  
-- quick-connect systems  
-- compression fittings  
-- micro-irrigation adapters  
-- rainwater tank outlets  
+This makes it flexible enough for setups ranging from a small balcony drip line to a greenhouse irrigation system.
 
-Whether you’re setting up a balcony drip line or a small greenhouse system, OpenValve fits right in.
+For more details about installing OpenValve, see the [installation section in the documentation](https://docs.open-valve.com/installation/overview).
 
-## 🛠️ Fully Repairable & Modifiable
-Because every custom plastic part is 3D-printable and source files are open:
-- print replacement parts  
-- tweak the housing
-- make custom mounts
-- modify firmware
-- integrate in your own projects
 
-Besides a soil moisture sensor OpenValve can be used with **any other 0–3.3V analog sensor**, for example:
+## Fully Repairable & Modifiable
 
-- potentiometers
-- temperature sensors  
-- distance sensors
-- weight sensors
-- custom DIY sensors  
+OpenValve was designed as an irrigation controller, but the core of the project is a compact, battery-powered pinch valve.
+
+For the irrigation use case, the valve is combined with a soil moisture sensor and firmware that decides when to water. With different firmware or sensors, the same valve platform can be adapted for other low-pressure fluid-control projects where low power consumption, fast actuation, and low internal flow resistance are useful.
+
+Because OpenValve is a pinch valve, the fluid does not need to touch the valve mechanism itself. If a continuous hose is routed through the valve, the fluid only comes into contact with the inside of that hose. With a suitable certified hose material, this can also make the fluid path suitable for applications where material compatibility or food safety matters.
+
+OpenValve is also designed to be repairable and modifiable:
+
+* the 3D-printed parts can be reprinted or modified
+* the silicone hose can be replaced when it wears out
+* the firmware can be changed for different behaviours
+* the electronics can be reused with other analog sensors
+* the valve can be powered from a 9V battery or an external 5V supply
+
+This makes OpenValve not only a practical irrigation controller, but also a starting point for custom low-power valve projects.
+
 
 --- 
 
 # Applications
-OpenValve was designed for **balconies, garden beds, small greenhouses, and other small-to-medium irrigation setups**. It has been deployed across multiple real-world locations. Both gravity-fed and faucet-fed (<= 2 bar) setups were tested through whole summer seasons.
+OpenValve was designed for **balconies, garden beds, small greenhouses, and other small-to-medium irrigation setups**. It has been deployed in multiple real-world locations. Both gravity-fed and faucet-fed (`≤ 2 bar`) setups were tested over full summer seasons.
 
 
-![OpenValve ins multiple locations](documents/pics/applications.gif)
+![OpenValve in multiple locations](documents/pics/applications.gif)
 
 
 # 💡 User Interface
 
-OpenValve’s user interface is intentionally minimal:
+OpenValve’s user interface (UI) is intentionally minimal:
 
 - **1 button**
-- **2 LEDs**  (one blue, one bi-color: green/red → also orange when combined)
+- **2 LEDs**: one blue LED and one bi-color LED that can show green, red, or orange
 
 Because the device is designed to run autonomously, the UI focuses on simple, essential interactions:
 
@@ -100,7 +108,9 @@ To make this easy to understand, every UI state is documented and can be explore
 
 
 This web-based “digital twin” mimics the behaviour of the real device - showing the same LED patterns and button interactions, along with explanations for each state.  
-It’s the easiest way to learn how OpenValve thinks and operates.
+
+For a complete explanation of the button actions, LED blink patterns, and UI states, see the [User Interface documentation](https://docs.open-valve.com/category/user-interface).
+
 
 ---
 # Availability
@@ -140,4 +150,4 @@ The waitlist helps me measure real demand and decide whether it makes sense to i
 Contributions are welcome!  
 If you’d like to help improve the firmware, CAD files, documentation, or electronics, feel free to open an issue or submit a pull request.
 
-You can also [join the project discord](https://discord.gg/JMEDK97xuT) to discuss ideas, ask questions, etc...
+You can also [join the project Discord](https://discord.gg/JMEDK97xuT) to discuss ideas, ask questions, or share feedback.
