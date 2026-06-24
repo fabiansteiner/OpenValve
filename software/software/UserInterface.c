@@ -18,7 +18,7 @@ UIstate uiState = SHOWNOTHING;
 warnings warningState = NO_WARNING;
 
 
-uint8_t soilLevel = 4;
+uint8_t soilLevel = 1;
 uint8_t multiplicator = 1;
 uint16_t valveCylces = 0;
 

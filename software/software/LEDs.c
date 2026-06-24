@@ -146,15 +146,10 @@ ISR(TCA0_OVF_vect)
 				(*func_ptr)(); //Call appropriate function that was assigned when changing the state
 		}
 	}else if(ongoingAnimation == A_TRANSITIONING_STARTUP){
-		if (animationCounter < 6){
-			//PORTA.OUTTGL = (1<<PIN_REDLED); 
-			PORTB.OUTTGL = (1<<PIN_GREENLED);
-			//PORTB.OUTTGL = (1<<BLUE_LED);
-			animationCounter++;
-		}else if (animationCounter >=6 && animationCounter<10){
+		if (animationCounter >=0 && animationCounter<4){
 			//Wait a little bit
 			animationCounter++;
-		}else if (animationCounter >=10 && animationCounter<VERSION_ANIMATION_COUNT1){
+		}else if (animationCounter >=4 && animationCounter<VERSION_ANIMATION_COUNT1){
 			//Toggle RED led to indicate MAJOR version
 			PORTA.OUTTGL = (1<<PIN_REDLED); 
 			animationCounter++;

@@ -14,7 +14,7 @@
 #define PIN_MAGNETSWITCH 0		//PORTB
 #define MAINLOOP_DELAY 10
 
-#define UI_TIMEOUT 30
+#define UI_TIMEOUT 51
 
 
 typedef enum {

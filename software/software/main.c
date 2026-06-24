@@ -337,7 +337,7 @@ int main(void)
 						irrigationTimeCounter++;
 						miliSecCounter=0;
 						
-						if(irrigationTimeCounter >= 900){	//900=15min timout
+						if(irrigationTimeCounter >= 819){	//900=15min timeout - 819 because of course time for other compute is needed besides the mainloop delay
 							//Simulate button press
 							changeUIState(SHORT);
 							
