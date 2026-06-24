@@ -283,17 +283,21 @@ int main(void)
 
 				//If manual irrigation off = normal operation = Take Soil Moisuture Measurement and Open/Close
 				if(manualIrrigation == 0 && executeMultiplicator == 0){
-					_delay_ms(MAINLOOP_DELAY/2);
+
 					PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
 					_delay_ms(MAINLOOP_DELAY/2);
-					SM = ADC_0_readSoilMoisture();
-					PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
-
+					
 					//turn off warning sign when periodic wakeup and there is a warning present
 					if(mState == PERIODICWAKEUP && warningState == WARNING){
 						PORTA.OUTCLR = (1<<PIN_REDLED);
 						PORTB.OUTCLR = (1<<PIN_GREENLED);
 					}
+
+					_delay_ms(MAINLOOP_DELAY/2);
+					SM = ADC_0_readSoilMoisture();
+					PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
+
+					
 				
 					if(SM >= getCurrentThresholds().thresholdClose){
 						if(getValveState() == OPEN){
