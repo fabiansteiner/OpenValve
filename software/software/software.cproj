@@ -153,6 +153,8 @@
         <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
       </AvrGcc>
     </ToolchainSettings>
+    <OutputFileName>OpenValve-v1.2-firmware</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ADC.c">

@@ -54,25 +54,25 @@ void initUI(){
 	//Check if its the very first startup
 	uint8_t readByte = FLASH_0_read_eeprom_byte(9);
 	if(readByte != 221){
-		//If it is the very first startup, write magic number to magic position to indicate that this is not the first startup
-		FLASH_0_write_eeprom_byte(9, 221);
-		//Also write standard values into eeprom
+
+		//If it is the very first startup, prepare eeprom...
+		
+		//...by writing current values into eeprom
 		FLASH_0_write_eeprom_byte(0, soilLevel);
 		FLASH_0_write_eeprom_byte(1, multiplicator);
-
 		writeValveCycles(valveCylces);
-		
-		
 
+		//... and AFTER that (in case of anything happens in between) put the "magic number" that signals an already prepared eeprom.
+		FLASH_0_write_eeprom_byte(9, 221);
 		
 	}else{
 		//If its is not the very first startup get settings from eeprom
 		readByte = FLASH_0_read_eeprom_byte(0);
-		if(readByte <= 8){
+		if(readByte <= 8 && readByte > 0){
 			soilLevel = readByte;
 		}
 		readByte = FLASH_0_read_eeprom_byte(1);
-		if(readByte <= 5){
+		if(readByte <= 5 && readByte > 0){
 			multiplicator = readByte;
 		}
 		valveCylces = readValveCycles();

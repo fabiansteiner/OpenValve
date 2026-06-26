@@ -160,14 +160,23 @@ void changePITInterval(){
 	
 }
 
-void switchOFF(){
-	disablePITInterrupt();
+uint8_t switchOFF(){
+
 	closeValve();
+
+	if (getValveError() != NO_ERROR) {
+		return 0;		// Error: caller must fall through to normal error handling
+	}
+
+	directlyTriggerAnimation(A_TRANSITIONING_SHUTDOWN);
+	disablePITInterrupt();
 	PORTB_OUTCLR = (1<<BLUE_LED);
 	manualIrrigation = 0;
 	while(getLEDAnimation() != NO_ANIMATION);
 	mState = OFF;
 	sleep_mode();
+
+    return 1; //sleep_mode() returns here after wake-up. mState is still OFF here. Caller must skip the remainder of the old ACTIVE-loop iteration. 
 }
 
 
@@ -268,7 +277,9 @@ int main(void)
 						miliSecCounter=0;
 					}
 				
-					if(changeOfState == UI_SHUTDOWN){switchOFF(); continue;}
+					if (changeOfState == UI_SHUTDOWN) {
+						if (switchOFF()) {continue;}
+					}
 
 				}else if(mState == PERIODICWAKEUP){
 					if(getValveState() == CLOSED){

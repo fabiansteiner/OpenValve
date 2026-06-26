@@ -331,8 +331,6 @@ void changeLEDAnimation(state_change change){
 		break;
 		case UI_OFF_WITHOUT_CONFIRMING: func_ptr = &stopLEDs; animateTransition(LED_TIMEOUT);	//Transition
 		break;
-		case UI_SHUTDOWN: func_ptr = &stopLEDs; animateTransition(LED_SHUTDOWN);	//Transition
-		break;
 		case SHOW_ERROR: animateValveErrors();
 		break;
 		case FROM_SHOW_ERROR_TO_SHOWBATTERY: batteryLevel = getBatteryLevel4Indications(); animateBatteryLevel();
@@ -564,6 +562,9 @@ void directlyTriggerAnimation(currentLEDAnimation chooseAnimation){
 	}else if(chooseAnimation == A_TRANSITIONING_RESETCYCLES){
 		func_ptr = &stopLEDs;
 		animateTransition(LED_RESETCYCLECOUNTER);
+	}else if(chooseAnimation == A_TRANSITIONING_SHUTDOWN){
+		func_ptr = &stopLEDs; 
+		animateTransition(LED_SHUTDOWN);
 	}
 }
 
