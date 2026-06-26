@@ -1,20 +1,44 @@
-# OpenValve - An Open-Source Irrigation Controller and Pinch Valve Platform
+<div align="center">
 
-[Get OpenValve](#availability) | [Build OpenValve](documents/Construction.md) | [Documentation](https://docs.open-valve.com) | [Join Discord](https://discord.gg/JMEDK97xuT)
+# OpenValve
 
-----
+<a href="#availability">Get OpenValve</a> | <a href="documents/Construction.md">Build OpenValve</a> | <a href="https://docs.open-valve.com">Documentation</a> | <a href="https://discord.gg/JMEDK97xuT">Join Discord</a>
 
-OpenValve is an **open-source, 3D-printable irrigation controller** with a custom pinch-valve mechanism at its core. It waters plants based on **actual soil moisture**, works with **gravity-fed systems**, and runs on a 9V battery for **about 3 months**. With different firmware or sensors, the same battery-powered pinch-valve platform can also be adapted for other projects.
+</div>
 
 
 
-![Open Valve First Impressions](documents/pics/OpenValveTeaser.gif)
 
---- 
 
-# ✨ Key Features
 
-## 🚰 3D-Printable Pinch Valve
+
+
+## Introduction
+
+OpenValve is an **open-source, 3D-printable irrigation controller**. It waters plants based on **actual soil moisture**, works with **gravity-fed systems**, and runs on a **9V block battery for about 3 months**.
+
+![OpenValve First Impressions](documents/pics/OpenValveTeaser.gif)
+
+OpenValve was originally designed for irrigation. The soil moisture sensor and the firmware turn it into an irrigation controller.
+
+Take those irrigation-specific parts away, and you are left with an **open-source pinch valve**. From there, the project is yours to shape: add your own sensor, write your own firmware, or connect it to another system and use it in a completely different way.
+
+> [!NOTE]
+> **OpenValve comes with one finished application.** What you build around the valve is up to you.
+
+
+That is why it is called OpenValve.
+
+
+
+
+
+
+
+
+## ✨ Key Features
+
+### 🚰 3D-Printable Pinch Valve
 
 
 - valve actuation works **down to 0 bar**, making it **perfect for gravity-fed setups**
@@ -25,7 +49,7 @@ OpenValve is an **open-source, 3D-printable irrigation controller** with a custo
 
 ![Open Valve First Impressions](documents/pics/PinchValve.gif)
 
-## 🌧️ Sensor-Based Irrigation
+### 🌧️ Sensor-Based Irrigation
 
 OpenValve does not water on a fixed timer. Instead, it uses a soil moisture sensor to decide when watering is needed.
 
@@ -45,7 +69,7 @@ For a more detailed explanation of the watering logic, see the ["How OpenValve w
 
 
 
-## 🔗 Standard Hose & Pipe Connections
+### 🔗 Standard Hose & Pipe Connections
 
 OpenValve has a standard **½″ male BSPP thread on both ends**. This thread size is common in irrigation and plumbing systems in Europe, the UK, Australia, and many other regions.
 
@@ -62,7 +86,7 @@ This makes it flexible enough for setups ranging from a small balcony drip line 
 For more details about installing OpenValve, see the [installation section in the documentation](https://docs.open-valve.com/installation/overview).
 
 
-## Fully Repairable & Modifiable
+### Fully Repairable & Modifiable
 
 OpenValve was designed as an irrigation controller, but the core of the project is a compact, battery-powered pinch valve.
 
@@ -81,16 +105,15 @@ OpenValve is also designed to be repairable and modifiable:
 This makes OpenValve not only a practical irrigation controller, but also a starting point for custom low-power valve projects.
 
 
---- 
 
-# Applications
+## Applications
 OpenValve was designed for **balconies, garden beds, small greenhouses, and other small-to-medium irrigation setups**. It has been deployed in multiple real-world locations. Both gravity-fed and faucet-fed (`≤ 2 bar`) setups were tested over full summer seasons.
 
 
 ![OpenValve in multiple locations](documents/pics/applications.gif)
 
 
-# 💡 User Interface
+## 💡 User Interface
 
 OpenValve’s user interface (UI) is intentionally minimal:
 
@@ -112,8 +135,8 @@ This web-based “digital twin” mimics the behaviour of the real device - show
 For a complete explanation of the button actions, LED blink patterns, and UI states, see the [User Interface documentation](https://docs.open-valve.com/category/user-interface).
 
 
----
-# Availability
+
+## Availability
 
 ### Can I get an OpenValve already?
 
@@ -142,10 +165,7 @@ If you’d like to get an OpenValve for yourself once it becomes available, you 
 The waitlist helps me measure real demand and decide whether it makes sense to invest in the next steps needed to turn OpenValve into a product. If you join the waitlist, you’ll also be among the first to hear about updates on availability.
 
 
-
----
-
-# 🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome!  
 If you’d like to help improve the firmware, CAD files, documentation, or electronics, feel free to open an issue or submit a pull request.
