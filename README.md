@@ -6,34 +6,18 @@
 
 </div>
 
-
-
-
-
-
-
-
 ## Introduction
 
 OpenValve is an **open-source, 3D-printable irrigation controller**. It waters plants based on **actual soil moisture**, works with **gravity-fed systems**, and runs on a **9V block battery for about 3 months**.
 
 ![OpenValve First Impressions](documents/pics/OpenValveTeaser.gif)
 
-OpenValve was originally designed for irrigation. The soil moisture sensor and the firmware turn it into an irrigation controller.
+OpenValve was built for irrigation. But underneath the soil moisture sensor and irrigation firmware is an open-source pinch valve that you can build other things around.
 
-Take those irrigation-specific parts away, and you are left with an **open-source pinch valve**. From there, the project is yours to shape: add your own sensor, write your own firmware, or connect it to another system and use it in a completely different way.
 
 > [!NOTE]
-> **OpenValve comes with one finished application.** What you build around the valve is up to you.
-
-
-That is why it is called OpenValve.
-
-
-
-
-
-
+> **Built for irrigation. Open to other ideas.**
+> Add your own sensor, write your own firmware, or connect OpenValve to another system. [Explore OpenValve as a valve platform →](documents/OV-as-platform.md)
 
 
 ## ✨ Key Features
@@ -41,11 +25,12 @@ That is why it is called OpenValve.
 ### 🚰 3D-Printable Pinch Valve
 
 
-- valve actuation works **down to 0 bar**, making it **perfect for gravity-fed setups**
-- requires **no minimum flow** and **no minimum pressure**  
+- bistable (no power needed to hold the open/closed position)
+- reliably actuates **down to 0 bar**, making it **perfect for gravity-fed setups**
+- requires **no minimum flow**
 - tolerates **imperfect or particle-rich water**  
-- provides a straight **8 mm inner flow path** (Cv ≈ 2)  
-- handles pressures up to **2 bar** (0–30 psi)  
+- **8 mm inner flow path** (Cv ≈ 2)  
+- Max. pressure: **2 bar** (30 psi)  
 
 ![Open Valve First Impressions](documents/pics/PinchValve.gif)
 
@@ -67,6 +52,7 @@ When the soil dries out faster, for example during hot weather or periods of inc
 
 For a more detailed explanation of the watering logic, see the ["How OpenValve works" section in the documentation.](https://docs.open-valve.com/category/how-openvalve-works) 
 
+![How OpenValve waters](documents/pics/HowItWorksGif.gif)
 
 
 ### 🔗 Standard Hose & Pipe Connections
@@ -86,23 +72,17 @@ This makes it flexible enough for setups ranging from a small balcony drip line 
 For more details about installing OpenValve, see the [installation section in the documentation](https://docs.open-valve.com/installation/overview).
 
 
-### Fully Repairable & Modifiable
+### 🛠️ Fully Repairable & Modifiable
 
-OpenValve was designed as an irrigation controller, but the core of the project is a compact, battery-powered pinch valve.
-
-For the irrigation use case, the valve is combined with a soil moisture sensor and firmware that decides when to water. With different firmware or sensors, the same valve platform can be adapted for other low-pressure fluid-control projects where low power consumption, fast actuation, and low internal flow resistance are useful.
-
-Because OpenValve is a pinch valve, the fluid does not need to touch the valve mechanism itself. If a continuous hose is routed through the valve, the fluid only comes into contact with the inside of that hose. With a suitable certified hose material, this can also make the fluid path suitable for applications where material compatibility or food safety matters.
-
-OpenValve is also designed to be repairable and modifiable:
+OpenValve is designed to be repaired, modified, and reused.
 
 * the 3D-printed parts can be reprinted or modified
-* the silicone hose can be replaced when it wears out
+* the silicone hose (pinch valve sleeve) can be replaced when it wears out
 * the firmware can be changed for different behaviours
-* the electronics can be reused with other analog sensors
-* the valve can be powered from a 9V battery or an external 5V supply
+* the hardware and firmware allow easy integration of different sensors
+* the valve can alternatively be powered from an external 5 V, 1 A supply
 
-This makes OpenValve not only a practical irrigation controller, but also a starting point for custom low-power valve projects.
+OpenValve was designed for irrigation, but can also be used for other projects. [Explore OpenValve as a valve platform →](documents/OV-as-platform.md)
 
 
 
