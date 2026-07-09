@@ -20,6 +20,13 @@ OpenValve was built for irrigation. But underneath the soil moisture sensor and 
 > Add your own sensor, write your own firmware, or connect OpenValve to another system. [Explore OpenValve as a valve platform →](documents/OV-as-platform.md)
 
 
+## Applications
+OpenValve was designed for **balconies, garden beds, small greenhouses, and other small-to-medium irrigation setups**. It has been deployed in multiple real-world locations. Both gravity-fed and faucet-fed (`≤ 4 bar`) setups were successfully tested over full summer seasons.
+
+
+![OpenValve in multiple locations](documents/pics/applications.gif)
+
+
 ## ✨ Key Features
 
 ### 🚰 3D-Printable Pinch Valve
@@ -30,21 +37,21 @@ OpenValve was built for irrigation. But underneath the soil moisture sensor and 
 - requires **no minimum flow**
 - tolerates **imperfect or particle-rich water**  
 - **8 mm inner flow path** (Cv ≈ 2)  
-- Max. pressure: **2 bar** (30 psi)  
+- Max. pressure: **4 bar** (60 psi)  
 
 ![Open Valve First Impressions](documents/pics/PinchValve.gif)
 
 ### 🌧️ Sensor-Based Irrigation
 
-OpenValve does not water on a fixed timer. Instead, it uses a soil moisture sensor to decide when watering is needed.
+OpenValve does not water on a fixed timer. Instead, it uses a **soil moisture sensor** to decide when watering is needed.
 
-The basic process is:
+#### How it works:
 
 1. OpenValve regularly measures the soil moisture.
 2. If the soil is drier than the threshold you set, the valve opens.
 3. Water flows until the sensor detects that moisture is increasing.
-4. The valve then stays open a little longer, based on the extra watering time you set.
-5. The valve closes again.
+4. The valve then either closes immedetiately or stays open for longer, based on the extra watering time you set.
+5. OpenValve stops watering and returns to the regular soil moisture measurement.
 
 This allows the watering frequency to adapt to the actual conditions around the plant instead of following a fixed schedule:
 
@@ -55,19 +62,21 @@ For a more detailed explanation of the watering logic, see the ["How OpenValve w
 ![How OpenValve waters](documents/pics/HowItWorksGif.gif)
 
 
+
+
 ### 🔗 Standard Hose & Pipe Connections
 
 OpenValve has a standard **½″ male BSPP thread on both ends**. This thread size is common in irrigation and plumbing systems in Europe, the UK, Australia, and many other regions.
 
-With the right adapters, OpenValve can be connected to many different hose and pipe systems, for example:
+Any fitting, adapter, or component with a compatible **½″ female BSPP thread** can be connected directly to OpenValve, for example:
 
 * compression fittings
 * hose connectors
-* thread adapters, such as **½″ to ¾″**
+* thread adapters, such as ½″ to ¾″
 * quick-connect fittings
-* different hose sizes
+* adapters for different hose sizes
 
-This makes it flexible enough for setups ranging from a small balcony drip line to a greenhouse irrigation system.
+This makes OpenValve flexible enough for setups ranging from a small balcony drip line to a greenhouse irrigation system.
 
 For more details about installing OpenValve, see the [installation section in the documentation](https://docs.open-valve.com/installation/overview).
 
@@ -84,13 +93,6 @@ OpenValve is designed to be repaired, modified, and reused.
 
 OpenValve was designed for irrigation, but can also be used for other projects. [Explore OpenValve as a valve platform →](documents/OV-as-platform.md)
 
-
-
-## Applications
-OpenValve was designed for **balconies, garden beds, small greenhouses, and other small-to-medium irrigation setups**. It has been deployed in multiple real-world locations. Both gravity-fed and faucet-fed (`≤ 2 bar`) setups were tested over full summer seasons.
-
-
-![OpenValve in multiple locations](documents/pics/applications.gif)
 
 
 ## 💡 User Interface

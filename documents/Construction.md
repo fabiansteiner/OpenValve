@@ -1,6 +1,9 @@
-# 🔧 How to build OpenValve
+## 🔧 How to build OpenValve
 
 OpenValve is not available as a ready-to-use consumer product and must be assembled by yourself. 
+
+### Assembly Guide
+If you bought an OpenValve assembly kit and want to start building: Watch the [Assembly Guide Video](https://youtu.be/af_efyuOWUs). The video guides you through the assembly with detailed step-by-step assembly instructions.
 
 ### To build your own you need:
 - the assembly kit + soil moisture sensor (soon available on lectronz)
@@ -13,7 +16,6 @@ OpenValve is not available as a ready-to-use consumer product and must be assemb
 *Optionally all missing 3D-printed parts can be purchased with the assembly kit, in which case there is no 3D printer or filament necessary to build OpenValve.
 
 
-### Start building 
-If you bought an OpenValve assembly kit and want to start building it: Watch the [Assembly Guide Video](https://youtu.be/af_efyuOWUs). The video guides you through the assembly with detailed step-by-step assembly instructions.
+
 
 

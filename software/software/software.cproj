@@ -153,7 +153,7 @@
         <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
       </AvrGcc>
     </ToolchainSettings>
-    <OutputFileName>OpenValve-v1.2-firmware</OutputFileName>
+    <OutputFileName>OV_FW_SensorIrrigation_v1.2_SoilWatch10</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
   </PropertyGroup>
   <ItemGroup>
