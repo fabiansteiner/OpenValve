@@ -2,7 +2,7 @@
 
 # OpenValve
 
-<a href="#availability">Get OpenValve</a> | <a href="documents/Construction.md">Build OpenValve</a> | <a href="https://docs.open-valve.com">Documentation</a> | <a href="https://discord.gg/JMEDK97xuT">Join Discord</a>
+<a href="https://open-valve.com/">Get OpenValve</a> | <a href="documents/Construction.md">Build OpenValve</a> | <a href="https://docs.open-valve.com">Documentation</a> | <a href="https://discord.gg/JMEDK97xuT">Join Discord</a>
 
 </div>
 
@@ -115,36 +115,6 @@ To make this easy to understand, every UI state is documented and can be explore
 This web-based “digital twin” mimics the behaviour of the real device - showing the same LED patterns and button interactions, along with explanations for each state.  
 
 For a complete explanation of the button actions, LED blink patterns, and UI states, see the [User Interface documentation](https://docs.open-valve.com/category/user-interface).
-
-
-
-## Availability
-
-### Can I get an OpenValve already?
-
-**Not yet.**  
-OpenValve is currently still in the prototype stage and is **not yet available as a finished product**.
-
-### Why is it not available yet?
-
-Turning OpenValve from a working prototype into a real product requires additional steps such as:
-
-- certification / compliance
-- small-batch production setup
-- packaging and logistics
-- support infrastructure
-
-These steps come with significant cost and effort.
-
-### I want one — what should I do?
-
-If you’d like to get an OpenValve for yourself once it becomes available, you can join the waitlist here:
-
-**[Join the OpenValve waitlist](https://open-valve.com/)**
-
-### What is the waitlist for?
-
-The waitlist helps me measure real demand and decide whether it makes sense to invest in the next steps needed to turn OpenValve into a product. If you join the waitlist, you’ll also be among the first to hear about updates on availability.
 
 
 ## 🤝 Contributing
