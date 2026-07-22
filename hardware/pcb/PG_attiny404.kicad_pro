@@ -605,6 +605,12 @@
         },
         {
           "group_by": false,
+          "label": "MPN",
+          "name": "MPN",
+          "show": true
+        },
+        {
+          "group_by": false,
           "label": "DK_Detail_Page",
           "name": "DK_Detail_Page",
           "show": true
@@ -629,21 +635,9 @@
         },
         {
           "group_by": false,
-          "label": "FT Rotation Offset",
-          "name": "FT Rotation Offset",
-          "show": false
-        },
-        {
-          "group_by": false,
           "label": "Family",
           "name": "Family",
           "show": false
-        },
-        {
-          "group_by": false,
-          "label": "JLC",
-          "name": "JLC",
-          "show": true
         },
         {
           "group_by": false,
@@ -659,8 +653,8 @@
         },
         {
           "group_by": false,
-          "label": "MPN",
-          "name": "MPN",
+          "label": "JLC",
+          "name": "JLC",
           "show": true
         },
         {
@@ -769,7 +763,7 @@
       "workbook_filename": ""
     },
     "page_layout_descr_file": "",
-    "plot_directory": "",
+    "plot_directory": "C:/Users/fabia/Downloads/",
     "space_save_all_events": true,
     "spice_adjust_passive_values": false,
     "spice_current_sheet_as_root": false,

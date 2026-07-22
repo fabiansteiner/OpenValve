@@ -1,7 +1,8 @@
 # 🛠️ Electronics
 
-The PCB was designed using KiCad.
+The PCB was designed using KiCad. OpenValve is based on the ATTINY804 microcontroller.
+
+Schematic, PCB layout and BOM are all open.
 
 
-The PCB layout is kept private for now, but the schematic and BOM are open.
 

@@ -4,10 +4,6 @@
 	(generator_version "9.0")
 	(uuid "e68a78e5-8846-4666-9105-5fa8784d19c8")
 	(paper "A4")
-	(title_block
-		(title "OpenValve PCB")
-		(rev "0.2")
-	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x01_Pin"
 			(pin_names
@@ -6856,7 +6852,6 @@
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(property "JLC" "C2053283"
@@ -8530,7 +8525,7 @@
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(uuid "00000000-0000-0000-0000-0000632b7f32")

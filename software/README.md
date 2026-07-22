@@ -57,6 +57,6 @@ Proceed with extreme caution when changing anything related to:
 - motor control timing  
 - stall detection  
 - open/close cycle control 
-
+- interrupt behaviour
 
 
