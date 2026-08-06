@@ -38,6 +38,8 @@ In addition to the [PCB](./pcb) and [3D-printed parts](./3D-models), the followi
 | 9 V battery clip cable, 15 cm        |        1 | [Example — AliExpress](https://de.aliexpress.com/item/1005009963920324.html) |
 | Soil moisture sensor                 |        1 | [SoilWatch 10 — Pino-Tech](https://pino-tech.eu/product/soilwatch-10/)       |
 | JGA25-370 DC gear motor, 6 V, 10 RPM |        1 | [Example — AliExpress](https://de.aliexpress.com/item/32987942205.html)      |
+| Cable 24AWG or 22AWG BLACK/RED, 12cm |        1 | [Example — DigiKey](https://www.digikey.at/de/products/detail/tensility-international-corp/30-03167/21769210)      |
+
 
 ## Valve tubing and assembly materials
 

@@ -98,7 +98,7 @@ If your printer does not have a multi-material system, a dual-extruder system ca
 
 All PC parts are included in the assembly kit by default.
 
-They are included because they must stay within very narrow tolerances and require highly repeatable printing results. They also require special assembly tools and precise post-processing.
+They are included because they must stay within very narrow tolerances and require highly repeatable printing results. They also require a special tool to assemble repeatably and some precise post-processing of the holes with a 3.1mm drill bit.
 
 In addition, polycarbonate is not a commonly used 3D-printing material and may not be readily available to every user.
 
