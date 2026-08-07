@@ -2,7 +2,7 @@
 
 # OpenValve
 
-<a href="https://open-valve.com/">Get OpenValve</a> | <a href="documents/Construction.md">Build OpenValve</a> | <a href="https://docs.open-valve.com">Documentation</a> | <a href="https://discord.gg/JMEDK97xuT">Join Discord</a>
+<a href="https://open-valve.com/">Get OpenValve</a> | <a href="documents/Construction.md">Build OpenValve</a> | <a href="https://docs.open-valve.com">Documentation</a> | <a href="https://discord.gg/JMEDK97xuT">Join Discord</a> | <a href="https://www.youtube.com/@stonie422">YouTube</a> | <a href="https://www.instagram.com/openvalve.real">Instagram</a>
 
 </div>
 
