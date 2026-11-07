@@ -13,55 +13,35 @@
 #ifndef SOILMOISTURESENSOR_H_
 #define SOILMOISTURESENSOR_H_
 
+#include <stdint.h>
 
-
+// Available sensors
 #define PinoTech_SoilWatch10 10
-#define Truebner_SMT50 20
+#define Truebner_SMT50     20
+//#define CUSTOM_SENSOR     30		// <-- define a custom sensor here
 
 //Choose your soil moisture sensor:
 #define SELECTED_SENSOR PinoTech_SoilWatch10
 
-// Define function prototype
-//uint16_t getSensorTreshold(uint8_t sensorLevel);
-
-
-//Definition of sensor specific characteristics:
-
+// Sensor-specific startup time
 #if SELECTED_SENSOR == PinoTech_SoilWatch10
-	#pragma message("Compiling with Sensor: PinoTech_SoilWatch10")
-	#define STARTUP_TIME 5
-
-	//These adc_treshold values represent the following volumetric soil content values of the SoilWatch 10 Sensor: [12,16,20,24,28,32,36,40]%
-	static const uint16_t adc_trehsolds[8] = {378,488,577,649,709,759,803,843};
-
-	static uint16_t getSensorTreshold(uint8_t sensorLevel) {
-		return adc_trehsolds[sensorLevel]; 
-	}
-
-	static uint8_t calculateCurrentSoilMoistureLevel(uint16_t soilMoistureADC, uint8_t valveOpen){
-		for(uint8_t i = 0; i< 8; i++){
-			if(soilMoistureADC < adc_trehsolds[i] + valveOpen * 25){
-				return i+1;
-			}
-		}
-		return 9;
-	}
-	
-
+	#define STARTUP_TIME 10
 
 #elif SELECTED_SENSOR == Truebner_SMT50
-	#pragma message("Compiling with Sensor: Truebner_SMT50")
 	#define STARTUP_TIME 300
 
-	#define ADCSTEPS 93		//Because 3.0V = 930/10 = 93
+// Choose startup time (how much milliseconds until the sensor outputs a stable measurement?) Should be below 500ms, otherwise the logic in main does not work
 
-	static inline uint16_t getSensorTreshold(uint8_t sensorLevel) {
-		return sensorLevel * ADCSTEPS;
-	}
+//#elif SELECTED_SENSOR == CUSTOM_SENSOR
+//	#define STARTUP_TIME 444
 
 #else
-	#error "Unknown option selected"
-
+	#error "Unknown soil moisture sensor selected"
 #endif
+
+
+uint16_t getSensorThreshold(uint8_t sensorLevel);
+
+uint8_t calculateCurrentSoilMoistureLevel(uint16_t soilMoistureADC,uint8_t valveOpen);
 
 #endif /* SOILMOISTURESENSOR_H_ */

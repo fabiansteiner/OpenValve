@@ -31,7 +31,7 @@ uint16_t milliSecondCounter = 0;
 void changeThresholds(){
 	// Closing threshold has to be higher because if ADC delivers exactly a value on the borderline its likely that the valve cant decide if it should be open or closed.
 	
-	currentThresholds.tresholdOpen = getSensorTreshold(soilLevel-1);
+	currentThresholds.tresholdOpen = getSensorThreshold(soilLevel-1);
 	currentThresholds.thresholdClose = currentThresholds.tresholdOpen + 25;
 
 	//This is the linear approach

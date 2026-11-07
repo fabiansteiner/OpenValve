@@ -178,6 +178,9 @@
     <Compile Include="LEDs.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="SoilMoistureSensor.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="UserInterface.c">
       <SubType>compile</SubType>
     </Compile>

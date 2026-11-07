@@ -12,6 +12,7 @@
 #include "ADC.h"
 #include "LEDs.h"
 #include "EEPROM.h"
+#include "SoilMoistureSensor.h"
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <util/atomic.h>
@@ -34,6 +35,7 @@ volatile uint16_t irrigationTimeCounter = 0;
 volatile uint8_t currentSleepTime = 4;
 uint16_t miliSecCounter = 0;
 uint8_t executeMultiplicator = 0;
+volatile uint16_t sensorOnTimeCounter = 0;
 
 
 
@@ -65,6 +67,7 @@ ISR(RTC_PIT_vect)
 		sleepCounter++;
 		if(sleepCounter >= wakeUpCycles){
 			disablePORTBInterrupt();
+			sensorOnTimeCounter = 0;
 			mState = PERIODICWAKEUP;
 			
 		}
@@ -90,6 +93,7 @@ ISR(PORTB_PORT_vect)
 
 					mState = ACTIVE;
 					irrigationTimeCounter = 0;
+					sensorOnTimeCounter = 0;
 
 					if(getValveError() == NO_ERROR){
 						uiState = SHOWBATTERY;
@@ -220,7 +224,6 @@ int main(void)
 	
 	_delay_ms(100);			//Let setting settle in
 	uint16_t SM;
-	uint8_t motorStateChanged = 0;
 
 	
 	
@@ -296,54 +299,60 @@ int main(void)
 				if(manualIrrigation == 0 && executeMultiplicator == 0){
 
 					PORTA_OUTSET = (1<<PIN_SOILSENSORON);	//Turn on soil mositure sensor, takes around 5ms to get stable measurement
-					_delay_ms(MAINLOOP_DELAY/2);
-					
+					_delay_ms(MAINLOOP_DELAY);
+					sensorOnTimeCounter+=10;
+
 					//turn off warning sign when periodic wakeup and there is a warning present
 					if(mState == PERIODICWAKEUP && warningState == WARNING){
 						PORTA.OUTCLR = (1<<PIN_REDLED);
 						PORTB.OUTCLR = (1<<PIN_GREENLED);
 					}
 
-					_delay_ms(MAINLOOP_DELAY/2);
-					SM = ADC_0_readSoilMoisture();
-					PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
+					//For Sensor that need a bigger startup time than the MAINLOOP_DELAY of 10ms, wait for a stable measurement in periodic wakeup
+					if(STARTUP_TIME > MAINLOOP_DELAY && mState == PERIODICWAKEUP){
+						//PORTB_OUTCLR = (1<<BLUE_LED);
+						_delay_ms(STARTUP_TIME - MAINLOOP_DELAY);
+						sensorOnTimeCounter = STARTUP_TIME;
+					}
 
-					
+					if(sensorOnTimeCounter == STARTUP_TIME){
+
+						SM = ADC_0_readSoilMoisture();
+						PORTA_OUTCLR = (1<<PIN_SOILSENSORON);	//Turn off soil mositure sensor
 				
-					if(SM >= getCurrentThresholds().thresholdClose){
-						if(getValveState() == OPEN){
-							if(mState == ACTIVE || getCurrentMultiplicator() == 1){
-								closeValve();
-								motorStateChanged = 1;
-								irrigationTimeCounter = 0;
-								executeMultiplicator = 0;
-							}else{ //Calculate irrigation time 
+						if(SM >= getCurrentThresholds().thresholdClose){
+							if(getValveState() == OPEN){
+								if(mState == ACTIVE || getCurrentMultiplicator() == 1){
+									closeValve();
+									irrigationTimeCounter = 0;
+									executeMultiplicator = 0;
+								}else{ //Calculate irrigation time 
 								
-								uint16_t newIrrigationTimeCounter = irrigationTimeCounter * (0.5f * (getCurrentMultiplicator()-1));
+									uint16_t newIrrigationTimeCounter = irrigationTimeCounter * (0.5f * (getCurrentMultiplicator()-1));
 								
-								if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){ //If irrigation time already bigger than 2 hours then just close
-									//This case is now handled in later logic, where error is thrown for wrong sensor placement
-									//closeValve();
-									//irrigationTimeCounter = 0;
-								}else if ((irrigationTimeCounter + newIrrigationTimeCounter) > MULTIPLICATOR_TIME_LIMIT){	//If calculated irrigation would be bigger than 2 hours then set time so it is maximum 2 hours.
-									irrigationTimeCounter = (MULTIPLICATOR_TIME_LIMIT - irrigationTimeCounter)-4;	//-4 for accuracy
-									executeMultiplicator = 1;
-								}else{			//Otherwise just use the calculated time using the set multiplicator
-									irrigationTimeCounter = newIrrigationTimeCounter;
-									executeMultiplicator = 1;
-								}
+									if(irrigationTimeCounter > MULTIPLICATOR_TIME_LIMIT){ //If irrigation time already bigger than 2 hours then just close
+										//This case is now handled in later logic, where error is thrown for wrong sensor placement
+										//closeValve();
+										//irrigationTimeCounter = 0;
+									}else if ((irrigationTimeCounter + newIrrigationTimeCounter) > MULTIPLICATOR_TIME_LIMIT){	//If calculated irrigation would be bigger than 2 hours then set time so it is maximum 2 hours.
+										irrigationTimeCounter = (MULTIPLICATOR_TIME_LIMIT - irrigationTimeCounter)-4;	//-4 for accuracy
+										executeMultiplicator = 1;
+									}else{			//Otherwise just use the calculated time using the set multiplicator
+										irrigationTimeCounter = newIrrigationTimeCounter;
+										executeMultiplicator = 1;
+									}
 									
 								
 								
-							}
+								}
 							
+							}
+						}else if (SM <= getCurrentThresholds().tresholdOpen){
+							if(getValveState() == CLOSED){
+								openValve();
+							}
 						}
-					}else if (SM <= getCurrentThresholds().tresholdOpen){
-						if(getValveState() == CLOSED){
-							openValve();
-							motorStateChanged = 1;
-						}
-					}
+					}else if(sensorOnTimeCounter >= 500) sensorOnTimeCounter = 0;	//Reset the sensorOnTime if bigger than 500ms -> measurement every 500ms independent of sensor
 				//If manual irrigation on = just wait, measuring is not necessary
 				}else if(manualIrrigation == 1 && executeMultiplicator == 0){
 					_delay_ms(MAINLOOP_DELAY);
@@ -412,7 +421,6 @@ int main(void)
 						
 						
 						sleepCounter = 0;
-						motorStateChanged = 0;
 						mState = SLEEP;
 						PORTB_OUTCLR = (1<<BLUE_LED);
 						enablePORTBInterrupt();
@@ -423,7 +431,6 @@ int main(void)
 						if(getLEDAnimation() == NO_ANIMATION){
 							changePITInterval();
 							sleepCounter = 0;
-							motorStateChanged = 0;
 							mState = SLEEP;
 							enablePORTBInterrupt();
 							//_delay_ms(500);
